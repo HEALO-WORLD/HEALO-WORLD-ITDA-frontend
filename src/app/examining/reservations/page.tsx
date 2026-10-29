@@ -1,11 +1,37 @@
 import PageHeader from "@/components/layout/PageHeader";
-import PagePlaceholder from "@/components/ui/PagePlaceholder";
+import { getCurrentExaminingOrganizationId, getEquipments } from "@/features/equipment/api";
+import { getReceivedReservations, IS_MOCK_DATA } from "@/features/reservations/api";
+import ReservationBoard from "@/features/reservations/components/ReservationBoard";
 
-export default function ReservationsPage() {
+/**
+ * 확정 예약 관리 (S06) — 조회 중심.
+ * 현재 검사기관(개발용 세션 매핑)으로 접수된 예약만 서버에서 골라 넘기고, 검색·선택은 클라이언트에서 한다.
+ * 자동 확정 정책이므로 승인·거절·상태 변경 기능은 두지 않는다.
+ */
+export default async function ReservationsPage() {
+  const organizationId = await getCurrentExaminingOrganizationId();
+  const [reservations, equipments] = organizationId
+    ? await Promise.all([getReceivedReservations(organizationId), getEquipments(organizationId)])
+    : [[], []];
+
   return (
     <>
-      <PageHeader title="확정 예약 관리" />
-      <PagePlaceholder wireframe="agency reservation.png" />
+      <PageHeader title="확정 예약 관리" description="검사기관에 접수된 검사 예약과 진행 상태를 확인합니다." />
+      {IS_MOCK_DATA && (
+        <p className="-mt-3 mb-4 inline-block rounded border border-dashed border-amber-400 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+          개발용 예시 데이터
+        </p>
+      )}
+      {organizationId ? (
+        <ReservationBoard
+          reservations={reservations}
+          equipments={equipments.map(({ id, name, examType }) => ({ id, name, examType }))}
+        />
+      ) : (
+        <p role="status" className="rounded-xl border border-dashed border-line bg-white px-6 py-16 text-center text-[15px] text-gray-500">
+          검사기관 정보를 확인할 수 없습니다.
+        </p>
+      )}
     </>
   );
 }
