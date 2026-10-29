@@ -1,0 +1,96 @@
+import type { ReferralDisplayStatus } from "@/features/referrals/types";
+import type { ExamType } from "@/features/slots/types";
+import type { DateKey } from "@/lib/date/seoulDate";
+
+/**
+ * 검사 진행·결과(S08) 프론트엔드 타입.
+ *
+ * ⚠️ 검사 진행·결과 API와 상태 enum이 확정되지 않았다.
+ * 아래 타입은 Mock 데이터와 화면 렌더링을 위한 임시 타입이며, API 연동 시 응답 DTO에서 매핑한다.
+ * 예약 상태(ReferralDisplayStatus)와 검사 진행 상태·결과 등록 상태는 서로 다른 값으로 관리한다.
+ */
+
+/**
+ * 검사 진행 상태 (예약 상태와 별개).
+ * NOT_PERFORMED = 예약이 취소되어 검사를 하지 않음
+ */
+export type ExamProgressStatus = "WAITING" | "IN_PROGRESS" | "COMPLETED" | "NOT_PERFORMED";
+
+/** 검사 결과 상태 (판독 진행 단계 · 진단 내용이 아니다). 서버 enum 확인 필요 */
+export type ExamResultStatus = "PRELIMINARY" | "FINAL" | "NEEDS_REVIEW";
+
+/** 등록된 검사 결과 (상태 + 텍스트, 영상 파일은 다루지 않는다) */
+export interface ExamResult {
+  status: ExamResultStatus;
+  text: string;
+  /** 결과 등록 일시 (`YYYY-MM-DDTHH:mm`, 한국 시간) */
+  registeredAt: string;
+}
+
+/** 검사 진행 기록 (저장 데이터 형태: 예약과는 의뢰 ID로만 연결한다) */
+export interface ExaminationRecord {
+  /** 연결된 의뢰·예약 ID (ReferralSummary.id) */
+  referralId: string;
+  /** 검사를 수행하는 검사기관 ID (예약을 받은 기관과 같아야 한다) */
+  organizationId: string;
+  progressStatus: ExamProgressStatus;
+  /** 등록된 결과. 없으면 null */
+  result: ExamResult | null;
+}
+
+/** 화면 표시용 검사 1건: 예약 정보 + 검사 진행 기록 */
+export interface Examination {
+  /** 의뢰 ID (목록 key) */
+  id: string;
+  referralNumber: string;
+  virtualPatientId: string;
+  referringOrganizationName: string;
+  organizationName: string;
+  equipmentName: string;
+  examType: ExamType;
+  /** 검사 예정 일시 (`YYYY-MM-DDTHH:mm`, 한국 시간) */
+  scheduledAt: string;
+  /** 예약 상태 (검사 진행 상태와 별개) */
+  reservationStatus: ReferralDisplayStatus;
+  purpose: string;
+  requestedAt: string;
+  progressStatus: ExamProgressStatus;
+  result: ExamResult | null;
+}
+
+/**
+ * 화면 표시용 결과 등록 상태 (진행 상태·예약 상태에서 계산).
+ * - REGISTERED: 결과 등록 완료
+ * - PENDING: 검사 완료 · 결과 미등록 (등록 대상)
+ * - BEFORE_EXAM: 검사 전·진행 중이라 아직 등록할 수 없음
+ * - NOT_APPLICABLE: 예약 취소 등으로 등록 대상 아님
+ */
+export type ResultRegistrationStatus = "REGISTERED" | "PENDING" | "BEFORE_EXAM" | "NOT_APPLICABLE";
+
+/** 결과 등록 입력값 */
+export interface ExamResultInput {
+  status: ExamResultStatus | "";
+  text: string;
+}
+
+/** 검색 조건. 빈 문자열은 '전체' */
+export interface ExaminationSearchCriteria {
+  /** 의뢰번호·가상 환자 ID 부분 일치 */
+  keyword: string;
+  examType: ExamType | "";
+  progressStatus: ExamProgressStatus | "";
+  /** 결과 등록 여부: 등록 완료 / 미등록(검사 완료 후 결과 없음) */
+  resultRegistration: "REGISTERED" | "PENDING" | "";
+  /** 검사 예정일 기준 기간 (양 끝 포함, 한국 시간) */
+  dateFrom: DateKey | "";
+  dateTo: DateKey | "";
+}
+
+/** 검사 현황 요약 */
+export interface ExaminationSummaryCounts {
+  waiting: number;
+  inProgress: number;
+  completed: number;
+  /** 검사 완료 · 결과 미등록 */
+  resultPending: number;
+}
