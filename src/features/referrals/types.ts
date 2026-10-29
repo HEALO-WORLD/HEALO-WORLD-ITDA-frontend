@@ -1,0 +1,44 @@
+import type { ExamType } from "@/features/slots/types";
+
+/**
+ * 의뢰·예약 관리(S03) 프론트엔드 타입.
+ *
+ * ⚠️ 의뢰 생성·조회 API와 예약 상태 enum이 확정되지 않았다. (screen-spec S03 확인 필요)
+ * 아래 타입은 Mock 데이터와 화면 렌더링을 위한 임시 타입이며, API 계약 확정 후 응답 DTO에 맞춰 매핑한다.
+ */
+
+/**
+ * 화면 표시용 예약 상태 (와이어프레임 기준: 확정 / 처리 중 / 재조정 필요).
+ * 백엔드 상태 enum(HOLD 등)이 아니며, 연동 시 서버 상태 → 이 값으로 매핑한다.
+ */
+export type ReferralDisplayStatus = "CONFIRMED" | "PROCESSING" | "RESCHEDULE_REQUIRED";
+
+/** 최근 의뢰·예약 내역 1건 */
+export interface ReferralSummary {
+  /** 목록 key 등에 쓰는 안정적인 식별자 */
+  id: string;
+  /** 화면 표시용 의뢰 번호 */
+  referralNumber: string;
+  /** 가상 환자 ID (테스트용 식별자만 사용) */
+  virtualPatientId: string;
+  organizationId: string;
+  organizationName: string;
+  equipmentName: string;
+  examType: ExamType;
+  /** 검사 일시 (`YYYY-MM-DDTHH:mm`, 한국 시간) */
+  scheduledAt: string;
+  status: ReferralDisplayStatus;
+  /** 의뢰 목적 (선택 입력) */
+  purpose: string;
+  /** 의뢰 요청 일시 (`YYYY-MM-DDTHH:mm`, 한국 시간) */
+  requestedAt: string;
+}
+
+/** 의뢰 요청 입력값 */
+export interface ReferralFormInput {
+  virtualPatientId: string;
+  examType: ExamType | "";
+  organizationId: string;
+  slotId: string;
+  purpose: string;
+}
