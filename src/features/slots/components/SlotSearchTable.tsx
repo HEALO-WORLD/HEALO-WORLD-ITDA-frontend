@@ -8,12 +8,18 @@ interface SlotSearchTableProps {
   slots: ExamSlot[];
   /** 예약 요청 클릭 시 슬롯 식별자를 전달한다 */
   onRequestReservation: (slotId: string) => void;
+  /** 선택 버튼 문구 (재조정 모드에서 신규 예약 요청과 구분) */
+  actionLabel?: string;
 }
 
 const thClass = "px-7 py-5 text-left text-[15px] font-semibold text-gray-700";
 const tdClass = "px-7 py-6 text-[15px] text-gray-900";
 
-export default function SlotSearchTable({ slots, onRequestReservation }: SlotSearchTableProps) {
+export default function SlotSearchTable({
+  slots,
+  onRequestReservation,
+  actionLabel = "예약 요청",
+}: SlotSearchTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border border-line">
       <table className="w-full min-w-[880px] border-collapse">
@@ -46,7 +52,7 @@ export default function SlotSearchTable({ slots, onRequestReservation }: SlotSea
                   onClick={() => onRequestReservation(slot.id)}
                   className="h-12 w-[136px] rounded-lg bg-primary text-[15px] font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
                 >
-                  예약 요청
+                  {actionLabel}
                 </button>
               </td>
             </tr>
