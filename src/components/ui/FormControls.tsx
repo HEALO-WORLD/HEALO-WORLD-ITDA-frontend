@@ -46,6 +46,37 @@ export function SelectInput({ id, label, options, className = "", ...props }: Se
   );
 }
 
+type TextInputProps = FieldProps &
+  Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "type"> & {
+    /** 입력 아래 오류 문구. 있으면 aria-invalid로 연결한다 */
+    error?: string;
+  };
+
+export function TextInput({ id, label, error, className = "", ...props }: TextInputProps) {
+  const errorId = `${id}-error`;
+
+  return (
+    <div className={className}>
+      <label htmlFor={id} className={fieldLabelClass}>
+        {label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
+        className={`${controlClass} pr-4 placeholder:text-gray-400 ${error ? "border-red-500" : ""}`}
+        {...props}
+      />
+      {error && (
+        <p id={errorId} className="mt-1.5 text-sm text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 type DateInputProps = FieldProps & Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "type">;
 
 export function DateInput({ id, label, className = "", ...props }: DateInputProps) {
