@@ -30,10 +30,16 @@ export interface ExamSlot {
   isAvailable: boolean;
 }
 
+/** 시간대. 슬롯 검사 시작 시각 기준 (오전: 12:00 이전, 오후: 12:00부터) */
+export type TimeOfDay = "AM" | "PM";
+
 /** 검색 조건. 빈 문자열은 '전체'를 뜻한다 */
 export interface SlotSearchCriteria {
   examType: ExamType | "";
   /** `YYYY-MM-DD`. 비어 있으면 날짜 조건을 적용하지 않는다 */
   date: string;
   organizationId: string;
+  timeOfDay: TimeOfDay | "";
+  /** true면 지금 예약할 수 있는 슬롯(예약 가능 + 시작 전)만 반환한다 */
+  availableOnly: boolean;
 }

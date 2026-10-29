@@ -15,7 +15,7 @@ import { formatDateTimeWithWeekday } from "@/lib/format/date";
 import { IS_MOCK_DATA, searchSlots } from "../api";
 import type { ExamSlot, PartnerOrganization, SlotSearchCriteria } from "../types";
 
-import SlotSearchFilter from "./SlotSearchFilter";
+import SlotSearchFilter, { INITIAL_SLOT_CRITERIA } from "./SlotSearchFilter";
 import SlotSearchTable from "./SlotSearchTable";
 
 interface SlotSearchProps {
@@ -96,10 +96,9 @@ export default function SlotSearch({
         organizations={organizations}
         isSearching={search.status === "loading"}
         onSearch={handleSearch}
+        onReset={() => setSearch({ status: "idle" })}
         initialCriteria={
-          rescheduleReferral
-            ? { examType: rescheduleReferral.examType, date: "", organizationId: "" }
-            : undefined
+          rescheduleReferral ? { ...INITIAL_SLOT_CRITERIA, examType: rescheduleReferral.examType } : undefined
         }
         isExamTypeLocked={rescheduleReferral !== null}
         excludedEquipmentIds={excludedEquipmentIds}

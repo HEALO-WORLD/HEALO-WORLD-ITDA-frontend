@@ -1,19 +1,21 @@
-import { Search } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { RotateCcw, Search } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import DatePicker from "@/components/ui/DatePicker";
-import { SelectInput, type SelectOption } from "@/components/ui/FormControls";
+import { fieldLabelClass, SelectInput, type SelectOption } from "@/components/ui/FormControls";
 import type { DateKey } from "@/lib/date/seoulDate";
 
 import { getDateAvailability } from "../api";
 import type { AvailabilityFilter, DateAvailability } from "../availability";
-import type { ExamType, PartnerOrganization, SlotSearchCriteria } from "../types";
+import type { ExamType, PartnerOrganization, SlotSearchCriteria, TimeOfDay } from "../types";
 
 interface SlotSearchFilterProps {
   organizations: PartnerOrganization[];
   isSearching: boolean;
   onSearch: (criteria: SlotSearchCriteria) => void;
-  /** 처음 표시할 검색 조건 (재조정 모드에서 기존 예약의 검사 유형) */
+  /** 조건을 처음 상태로 되돌렸을 때 (이전 검색 결과 정리용) */
+  onReset?: () => void;
+  /** 처음 표시할 검색 조건 (재조정 모드에서 기존 예약의 검사 유형). 초기화도 이 조건으로 돌아간다 */
   initialCriteria?: SlotSearchCriteria;
   /** 검사 유형 변경 불가 (재조정 모드) */
   isExamTypeLocked?: boolean;
@@ -27,7 +29,21 @@ const EXAM_TYPE_OPTIONS: SelectOption[] = [
   { value: "MRI", label: "MRI" },
 ];
 
-const INITIAL_CRITERIA: SlotSearchCriteria = { examType: "", date: "", organizationId: "" };
+const TIME_OF_DAY_OPTIONS: { value: TimeOfDay | ""; label: string }[] = [
+  { value: "", label: "전체" },
+  { value: "AM", label: "오전" },
+  { value: "PM", label: "오후" },
+];
+
+const TIME_OF_DAY_LABELS: Record<TimeOfDay, string> = { AM: "오전", PM: "오후" };
+
+export const INITIAL_SLOT_CRITERIA: SlotSearchCriteria = {
+  examType: "",
+  date: "",
+  organizationId: "",
+  timeOfDay: "",
+  availableOnly: false,
+};
 
 const DISABLED_REASON = {
   FULL: "예약 마감",
@@ -36,13 +52,14 @@ const DISABLED_REASON = {
 
 /**
  * 검색 조건 입력. 조건 변경은 내부 상태에만 반영하고, 검색 버튼을 눌러야 상위로 전달한다.
- * 달력의 날짜 선택 가능 여부는 검색 결과와 별개로, 검사 유형·기관이 바뀔 때마다 다시 계산한다.
+ * 달력의 날짜 선택 가능 여부는 검색 결과와 같은 판정(검사 유형·기관·시간대)으로, 조건이 바뀔 때마다 다시 계산한다.
  */
 export default function SlotSearchFilter({
   organizations,
   isSearching,
   onSearch,
-  initialCriteria = INITIAL_CRITERIA,
+  onReset,
+  initialCriteria = INITIAL_SLOT_CRITERIA,
   isExamTypeLocked = false,
   excludedEquipmentIds,
 }: SlotSearchFilterProps) {
@@ -68,8 +85,9 @@ export default function SlotSearchFilter({
       setAvailability(next);
       if (selectedDate && next[selectedDate] !== "AVAILABLE") {
         setCriteria((prev) => (prev.date === selectedDate ? { ...prev, date: "" } : prev));
+        const timeText = filter.timeOfDay ? `${TIME_OF_DAY_LABELS[filter.timeOfDay]} ` : "";
         setDateNotice(
-          `선택한 날짜(${selectedDate})에 예약 가능한 슬롯이 없어 날짜 선택을 초기화했습니다.`,
+          `선택한 날짜(${selectedDate})에 바뀐 조건으로 예약 가능한 ${timeText}슬롯이 없어 날짜 선택을 초기화했습니다.`,
         );
       }
     },
@@ -84,11 +102,19 @@ export default function SlotSearchFilter({
     });
   }, [startCriteria, queryOptions]);
 
+  /** 달력에 영향을 주는 조건(유형·기관·시간대) 변경 */
   const updateFilter = (patch: Partial<AvailabilityFilter>) => {
     const next = { ...criteria, ...patch };
     setCriteria(next);
     setDateNotice(null);
     void refreshAvailability(next, next.date);
+  };
+
+  const handleReset = () => {
+    setCriteria(startCriteria);
+    setDateNotice(null);
+    void refreshAvailability(startCriteria, "");
+    onReset?.();
   };
 
   const getDisabledReason = (dateKey: DateKey): string | null => {
@@ -104,59 +130,116 @@ export default function SlotSearchFilter({
     ...organizations.map(({ id, name }) => ({ value: id, label: name })),
   ];
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSearch = () => {
+    if (isSearching) return;
     onSearch(criteria);
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
+    <div
+      role="search"
       aria-label="검사 슬롯 검색 조건"
-      className="grid grid-cols-1 items-end gap-6 rounded-xl border border-line bg-white px-8 py-7 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_236px]"
+      className="flex flex-col gap-5 rounded-xl border border-line bg-white px-6 py-6 sm:px-8"
     >
-      <SelectInput
-        id="slot-exam-type"
-        label="검사 유형"
-        options={EXAM_TYPE_OPTIONS}
-        value={criteria.examType}
-        disabled={isExamTypeLocked}
-        onChange={(e) => updateFilter({ examType: e.target.value as ExamType | "" })}
-      />
-      <DatePicker
-        id="slot-date"
-        label="검사 날짜"
-        value={criteria.date}
-        onChange={(date) => {
-          setCriteria((prev) => ({ ...prev, date }));
-          setDateNotice(null);
-        }}
-        getDisabledReason={getDisabledReason}
-        disablePast
-        placeholder="전체 기간"
-        disabledNote=""
-      />
-      <SelectInput
-        id="slot-organization"
-        label="협력 검사기관"
-        options={organizationOptions}
-        value={criteria.organizationId}
-        onChange={(e) => updateFilter({ organizationId: e.target.value })}
-      />
-      <button
-        type="submit"
-        disabled={isSearching}
-        className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary text-base font-bold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <Search className="size-5" aria-hidden="true" />
-        {isSearching ? "검색 중" : "검색"}
-      </button>
+      <div className="grid grid-cols-1 items-end gap-x-5 gap-y-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(220px,0.9fr)]">
+        <SelectInput
+          id="slot-exam-type"
+          label="검사 유형"
+          options={EXAM_TYPE_OPTIONS}
+          value={criteria.examType}
+          disabled={isExamTypeLocked}
+          onChange={(e) => updateFilter({ examType: e.target.value as ExamType | "" })}
+        />
+        <SelectInput
+          id="slot-organization"
+          label="협력 검사기관"
+          options={organizationOptions}
+          value={criteria.organizationId}
+          onChange={(e) => updateFilter({ organizationId: e.target.value })}
+        />
+        <DatePicker
+          id="slot-date"
+          label="검사 날짜"
+          value={criteria.date}
+          onChange={(date) => {
+            setCriteria((prev) => ({ ...prev, date }));
+            setDateNotice(null);
+          }}
+          getDisabledReason={getDisabledReason}
+          disablePast
+          placeholder="전체 기간"
+          disabledNote={
+            criteria.timeOfDay
+              ? `${TIME_OF_DAY_LABELS[criteria.timeOfDay]}에 예약 가능한 슬롯이 있는 날짜만 선택할 수 있습니다.`
+              : ""
+          }
+        />
+
+        {/* 시간대: 검사 시작 시각 기준 (오전 12:00 이전 / 오후 12:00부터) */}
+        <fieldset className="min-w-0">
+          <legend className={fieldLabelClass}>시간대</legend>
+          <div className="grid h-12 grid-cols-3 gap-1 rounded-lg border border-line bg-gray-50 p-1">
+            {TIME_OF_DAY_OPTIONS.map(({ value, label }) => {
+              const checked = criteria.timeOfDay === value;
+              return (
+                <label
+                  key={value || "ALL"}
+                  className={`flex cursor-pointer items-center justify-center rounded-md text-[15px] font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary ${checked ? "bg-white font-semibold text-primary shadow-sm ring-1 ring-primary/40" : "text-gray-600 hover:text-gray-900"
+                    }`}
+                >
+                  <input
+                    type="radio"
+                    name="slot-time-of-day"
+                    value={value}
+                    checked={checked}
+                    onChange={() => updateFilter({ timeOfDay: value })}
+                    className="sr-only"
+                  />
+                  {label}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      </div>
 
       {dateNotice && (
-        <p role="status" className="col-span-full -mt-2 text-sm text-amber-700">
+        <p role="status" className="-mt-2 text-sm text-amber-700">
           {dateNotice}
         </p>
       )}
-    </form>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <label className="inline-flex cursor-pointer items-center gap-2 text-[15px] text-gray-800">
+          <input
+            type="checkbox"
+            checked={criteria.availableOnly}
+            onChange={(e) => setCriteria((prev) => ({ ...prev, availableOnly: e.target.checked }))}
+            className="size-[18px] cursor-pointer rounded border-line accent-primary"
+          />
+          예약 가능한 슬롯만 보기
+          <span className="text-sm text-gray-500">(예약 불가 슬롯 제외)</span>
+        </label>
+        <div className="ml-auto flex gap-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-4 text-[15px] font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            <RotateCcw className="size-4" aria-hidden="true" />
+            초기화
+          </button>
+          <button
+            type="button"
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="inline-flex h-11 min-w-[148px] items-center justify-center gap-2 rounded-lg bg-primary px-6 text-base font-bold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Search className="size-5" aria-hidden="true" />
+            {isSearching ? "검색 중" : "슬롯 검색"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

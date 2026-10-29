@@ -3,6 +3,7 @@ import { getMockSlots, MOCK_PARTNER_ORGANIZATIONS } from "@/lib/dev/mockSlots";
 
 import {
   buildDateAvailability,
+  isBookableSlot,
   isUpcomingSlot,
   matchesSlotFilter,
   type AvailabilityFilter,
@@ -44,7 +45,11 @@ export async function getPartnerOrganizations(): Promise<PartnerOrganization[]> 
   return MOCK_PARTNER_ORGANIZATIONS;
 }
 
-/** 이미 지난 시간의 슬롯은 검색 결과에서 제외한다 (서버도 미래 슬롯만 반환한다고 가정 · 확인 필요) */
+/**
+ * 이미 지난 시간의 슬롯은 검색 결과에서 제외한다 (서버도 미래 슬롯만 반환한다고 가정 · 확인 필요).
+ * 시간대·예약 가능 조건은 달력(getDateAvailability)과 같은 판정 함수를 쓴다.
+ * TODO(api): 시간대·예약 가능 여부를 서버 검색 파라미터로 보낼 수 있으면 그쪽으로 옮긴다.
+ */
 export async function searchSlots(
   criteria: SlotSearchCriteria,
   options: SlotQueryOptions = {},
@@ -56,7 +61,8 @@ export async function searchSlots(
     (slot) =>
       matchesSlotFilter(slot, criteria) &&
       (!criteria.date || slot.startAt.startsWith(criteria.date)) &&
-      isUpcomingSlot(slot, dateTime),
+      isUpcomingSlot(slot, dateTime) &&
+      (!criteria.availableOnly || isBookableSlot(slot, dateTime)),
   ).sort((a, b) => a.startAt.localeCompare(b.startAt));
 }
 
@@ -68,7 +74,7 @@ export async function getSlotById(slotId: string): Promise<ExamSlot | null> {
   return getMockSlots(getSeoulNow().dateKey).find((slot) => slot.id === slotId) ?? null;
 }
 
-/** 달력에 표시할 날짜별 예약 가능 여부 (검사 유형·기관 기준) */
+/** 달력에 표시할 날짜별 예약 가능 여부 (검사 유형·기관·시간대 기준) */
 export async function getDateAvailability(
   filter: AvailabilityFilter,
   options: SlotQueryOptions = {},
