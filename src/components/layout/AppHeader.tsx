@@ -1,6 +1,5 @@
-import Link from "next/link";
-
-import { BellIcon, BuildingIcon, ChevronDownIcon } from "@/components/icons";
+import { BuildingIcon, ChevronDownIcon } from "@/components/icons";
+import NotificationBellLink from "@/features/notifications/components/NotificationBellLink";
 import type { SessionUser } from "@/types/auth";
 
 import Logo from "./Logo";
@@ -35,16 +34,11 @@ export default function AppHeader({ subtitle, user, notificationHref = null }: A
           {notificationHref && (
             <>
               <span className="h-6 w-px bg-line" aria-hidden="true" />
-              <Link
+              {/* 알림 상태 Provider 안에서는 공유 읽음 상태를, 밖에서는 세션 값을 사용한다 */}
+              <NotificationBellLink
                 href={notificationHref}
-                className="relative rounded-md p-1 text-gray-700 hover:bg-gray-100"
-                aria-label={user.hasUnreadNotifications ? "알림 (읽지 않은 알림 있음)" : "알림"}
-              >
-                <BellIcon className="size-6" />
-                {user.hasUnreadNotifications && (
-                  <span className="absolute right-1 top-0.5 size-2 rounded-full bg-primary ring-2 ring-white" />
-                )}
-              </Link>
+                fallbackHasUnread={user.hasUnreadNotifications}
+              />
             </>
           )}
         </div>
