@@ -15,6 +15,11 @@ const STATUS_META: Record<ReferralDisplayStatus, { label: string; className: str
   CANCELLED: { label: "취소", className: "bg-gray-100 text-gray-500" },
 };
 
+/** 상태 표시 문구 (필터 선택지 등에서 재사용) */
+export const REFERRAL_STATUS_LABELS = Object.fromEntries(
+  Object.entries(STATUS_META).map(([status, { label }]) => [status, label]),
+) as Record<ReferralDisplayStatus, string>;
+
 export default function ReferralStatusBadge({ status }: ReferralStatusBadgeProps) {
   const { label, className } = STATUS_META[status];
 

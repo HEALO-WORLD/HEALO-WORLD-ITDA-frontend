@@ -21,6 +21,10 @@ export interface ReferralSummary {
   referralNumber: string;
   /** 가상 환자 ID (테스트용 식별자만 사용) */
   virtualPatientId: string;
+  /** 의뢰를 보낸 의뢰기관 */
+  referringOrganizationId: string;
+  referringOrganizationName: string;
+  /** 검사를 받는 협력 검사기관 (예약이 접수된 기관) */
   organizationId: string;
   organizationName: string;
   equipmentName: string;
