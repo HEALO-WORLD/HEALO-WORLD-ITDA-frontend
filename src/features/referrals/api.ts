@@ -16,3 +16,12 @@ export async function getRecentReferrals(): Promise<readonly ReferralSummary[]> 
   return MOCK_REFERRAL_SUMMARIES;
 }
 
+export async function getReferralById(referralId: string): Promise<ReferralSummary | null> {
+  return MOCK_REFERRAL_SUMMARIES.find(({ id }) => id === referralId) ?? null;
+}
+
+/** 재조정이 필요한 의뢰·예약 (예약 상태 기준) */
+export async function getRescheduleRequiredReferrals(): Promise<ReferralSummary[]> {
+  return MOCK_REFERRAL_SUMMARIES.filter(({ status }) => status === "RESCHEDULE_REQUIRED");
+}
+

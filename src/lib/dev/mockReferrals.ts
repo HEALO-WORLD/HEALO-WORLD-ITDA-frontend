@@ -10,7 +10,9 @@ import { MOCK_PARTNER_ORGANIZATIONS } from "./mockSlots";
  * - 날짜는 고정 값이다 (날짜가 바뀌어도 내용이 변하지 않음)
  * - 가상 환자 ID는 DEMO-숫자 형식의 테스트 식별자만 사용하며, 실제 환자 정보는 포함하지 않는다
  * - 검사기관명은 슬롯 Mock의 협력 검사기관 목록에서 가져온다
- * - 예약 상태는 화면 표시용 값이다 (확정 3건 · 처리 중 2건 · 재조정 필요 2건)
+ * - 예약 상태는 화면 표시용 값이다 (확정 3건 · 처리 중 2건 · 재조정 필요 2건 · 취소 1건)
+ * - 재조정 필요 건(R-003, R-006)은 재조정 화면 확인을 위해 검사 예정일을 미래 날짜로 둔다
+ * - 알림 Mock(mockNotifications.ts)이 이 목록의 id로 관련 의뢰를 연결한다
  * API 연동 시 이 파일을 제거한다.
  */
 
@@ -48,7 +50,7 @@ const MOCK_REFERRALS: MockReferral[] = [
     organizationId: "org-gangnam",
     equipmentName: "MRI 1호기",
     examType: "MRI",
-    scheduledAt: "2026-10-28T15:00",
+    scheduledAt: "2026-11-02T15:00",
     status: "RESCHEDULE_REQUIRED",
     purpose: "추적 검사",
     requestedAt: "2026-10-21T16:05",
@@ -86,7 +88,7 @@ const MOCK_REFERRALS: MockReferral[] = [
     examType: "CT",
     scheduledAt: "2026-11-07T09:00",
     status: "RESCHEDULE_REQUIRED",
-    purpose: "장비 점검 일정으로 재조정 필요",
+    purpose: "",
     requestedAt: "2026-10-28T11:30",
   },
   {
@@ -100,6 +102,18 @@ const MOCK_REFERRALS: MockReferral[] = [
     status: "CONFIRMED",
     purpose: "",
     requestedAt: "2026-10-29T08:55",
+  },
+  {
+    id: "mock-referral-008",
+    referralNumber: "R-008",
+    virtualPatientId: "DEMO-1095",
+    organizationId: "org-seoulmedi",
+    equipmentName: "MRI 1호기",
+    examType: "MRI",
+    scheduledAt: "2026-11-10T10:00",
+    status: "CANCELLED",
+    purpose: "",
+    requestedAt: "2026-10-22T13:20",
   },
 ];
 

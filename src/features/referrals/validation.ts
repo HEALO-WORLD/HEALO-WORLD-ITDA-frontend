@@ -28,6 +28,24 @@ export function normalizeReferralInput(input: ReferralFormInput): ReferralFormIn
 }
 
 /**
+ * 선택한 슬롯이 아직 예약 가능한지 검증한다 (의뢰 생성·재조정 공통).
+ * @param slot 슬롯 ID로 다시 조회한 슬롯 (없으면 null)
+ * @returns 오류 문구. 문제가 없으면 undefined
+ */
+export function validateSelectedSlot(
+  slot: ExamSlot | null,
+  slotId: string,
+  nowDateTime: string,
+): string | undefined {
+  if (!slot || slot.id !== slotId) return "검사 슬롯을 다시 선택해 주세요.";
+  if (!slot.isAvailable) return "예약이 마감된 슬롯입니다. 검사 슬롯을 다시 선택해 주세요.";
+  if (!isUpcomingSlot(slot, nowDateTime)) {
+    return "검사 시간이 이미 지난 슬롯입니다. 검사 슬롯을 다시 선택해 주세요.";
+  }
+  return undefined;
+}
+
+/**
  * 입력값과 선택한 슬롯이 일치하는지 검증한다.
  * @param slot slotId로 다시 조회한 슬롯 (없으면 null)
  * @param nowDateTime 현재 한국 시각 `YYYY-MM-DDTHH:mm`
@@ -46,14 +64,9 @@ export function validateReferralInput(
     errors.virtualPatientId = "가상 환자 ID는 DEMO-숫자 형식으로 입력해 주세요. (예: DEMO-1024)";
   }
 
-  if (!slot || slot.id !== input.slotId) {
-    errors.slot = "검사 슬롯을 다시 선택해 주세요.";
-  } else {
-    if (!slot.isAvailable) errors.slot = "예약이 마감된 슬롯입니다. 검사 슬롯을 다시 선택해 주세요.";
-    else if (!isUpcomingSlot(slot, nowDateTime)) {
-      errors.slot = "검사 시간이 이미 지난 슬롯입니다. 검사 슬롯을 다시 선택해 주세요.";
-    }
-
+  const slotError = validateSelectedSlot(slot, input.slotId, nowDateTime);
+  if (slotError) errors.slot = slotError;
+  if (slot && slot.id === input.slotId) {
     if (input.examType !== slot.examType) {
       errors.examType = "검사 유형이 선택한 슬롯과 일치하지 않습니다.";
     }
