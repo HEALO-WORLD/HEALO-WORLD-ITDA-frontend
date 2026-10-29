@@ -40,6 +40,14 @@ export async function searchSlots(criteria: SlotSearchCriteria): Promise<ExamSlo
   ).sort((a, b) => a.startAt.localeCompare(b.startAt));
 }
 
+/**
+ * 슬롯 ID로 슬롯 1건 조회. 검색 화면과 같은 Mock 생성기를 사용하므로 같은 ID면 같은 슬롯 정보를 반환한다.
+ * 지난 시간·마감 여부는 걸러내지 않는다 (호출하는 쪽에서 판단).
+ */
+export async function getSlotById(slotId: string): Promise<ExamSlot | null> {
+  return getMockSlots(getSeoulNow().dateKey).find((slot) => slot.id === slotId) ?? null;
+}
+
 /** 달력에 표시할 날짜별 예약 가능 여부 (검사 유형·기관 기준) */
 export async function getDateAvailability(filter: AvailabilityFilter): Promise<DateAvailability> {
   const { dateKey, dateTime } = getSeoulNow();

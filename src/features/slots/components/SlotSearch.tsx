@@ -1,7 +1,9 @@
 "use client";
 
-import { Info } from "lucide-react";
 import { useState, type ReactNode } from "react";
+
+import Modal from "@/components/ui/Modal";
+import ReferralCreateForm from "@/features/referrals/components/ReferralCreateForm";
 
 import { IS_MOCK_DATA, searchSlots } from "../api";
 import type { ExamSlot, PartnerOrganization, SlotSearchCriteria } from "../types";
@@ -25,11 +27,10 @@ type SearchState =
  */
 export default function SlotSearch({ organizations }: SlotSearchProps) {
   const [search, setSearch] = useState<SearchState>({ status: "idle" });
-  /** 예약 요청을 누른 슬롯 식별자. 추후 의뢰·예약 관리 화면으로 전달할 값 */
-  const [requestedSlotId, setRequestedSlotId] = useState<string | null>(null);
+  /** 예약 요청을 누른 슬롯. 의뢰 생성 모달에 읽기 전용으로 표시한다 */
+  const [requestedSlot, setRequestedSlot] = useState<ExamSlot | null>(null);
 
   const handleSearch = async (criteria: SlotSearchCriteria) => {
-    setRequestedSlotId(null);
     setSearch({ status: "loading" });
     try {
       const slots = await searchSlots(criteria);
@@ -39,9 +40,10 @@ export default function SlotSearch({ organizations }: SlotSearchProps) {
     }
   };
 
-  // TODO(reservation): 예약 요청 연동 시 requestedSlotId(slotId)를 의뢰·예약 관리 화면으로 전달한다.
+  /** 검색 결과에서 슬롯을 찾아 의뢰 생성 모달을 연다 (예약 가능 여부는 제출 시 다시 검증) */
   const handleRequestReservation = (slotId: string) => {
-    setRequestedSlotId(slotId);
+    if (search.status !== "success") return;
+    setRequestedSlot(search.slots.find((slot) => slot.id === slotId) ?? null);
   };
 
   return (
@@ -74,16 +76,6 @@ export default function SlotSearch({ organizations }: SlotSearchProps) {
           )}
         </div>
 
-        {requestedSlotId && (
-          <div
-            role="status"
-            className="mb-4 flex items-center gap-2 rounded-lg bg-primary-soft px-4 py-3 text-[15px] text-primary"
-          >
-            <Info className="size-5 shrink-0" aria-hidden="true" />
-            예약 요청 기능은 추후 의뢰·예약 관리 화면과 연동될 예정입니다.
-          </div>
-        )}
-
         {search.status === "idle" && (
           <ResultMessage>검색 조건을 선택한 후 검색 버튼을 눌러 주세요.</ResultMessage>
         )}
@@ -105,6 +97,22 @@ export default function SlotSearch({ organizations }: SlotSearchProps) {
             <ResultMessage>선택한 조건에 해당하는 검사 슬롯이 없습니다.</ResultMessage>
           ))}
       </section>
+
+      <Modal
+        open={requestedSlot !== null}
+        title="새 검사 의뢰"
+        description="선택한 검사 슬롯으로 의뢰 정보를 입력합니다."
+        closeOnBackdrop={false}
+        onClose={() => setRequestedSlot(null)}
+      >
+        {requestedSlot && (
+          <ReferralCreateForm
+            slot={requestedSlot}
+            organizations={organizations}
+            onCancel={() => setRequestedSlot(null)}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
