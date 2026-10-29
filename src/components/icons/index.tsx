@@ -2,7 +2,10 @@ import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
-/** 외부 아이콘 라이브러리 없이 사용하는 라인 아이콘 모음 (24x24, stroke 기반) */
+/**
+ * 1단계에서 만든 라인 아이콘 모음 (24x24, stroke 기반). 헤더·사이드바에서 사용 중이다.
+ * 새로 추가하는 아이콘은 이 파일에 늘리지 말고 `lucide-react`에서 필요한 컴포넌트 안에서 직접 import한다.
+ */
 function BaseIcon({ children, ...props }: IconProps) {
   return (
     <svg
