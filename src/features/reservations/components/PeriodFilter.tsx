@@ -16,6 +16,10 @@ interface PeriodFilterProps {
   today: DateKey | null;
   /** 기간 조건 오류 (예: 시작일 > 종료일). 있으면 [적용]을 막는다 */
   error: string | null;
+  /** 기간 이름 (스크린리더 안내용). 기본: 검사 기간 */
+  label?: string;
+  /** 시작일·종료일 입력 id 접두어 (한 페이지에 여러 개일 때 구분). 기본: reservation */
+  idPrefix?: string;
 }
 
 const PRESETS: { value: PeriodPreset; label: string }[] = [
@@ -43,7 +47,16 @@ export function formatPeriodLabel(dateFrom: DateKey | "", dateTo: DateKey | "", 
  * 검사 기간 버튼 + 기간 선택 팝업 (빠른 기간 / 시작일 / 종료일).
  * 과거 예약 이력도 조회하므로 지난 날짜도 고를 수 있다. [적용]을 누르면 현재 조건 전체로 검색한다.
  */
-export default function PeriodFilter({ dateFrom, dateTo, onChange, onApply, today, error }: PeriodFilterProps) {
+export default function PeriodFilter({
+  dateFrom,
+  dateTo,
+  onChange,
+  onApply,
+  today,
+  error,
+  label = "검사 기간",
+  idPrefix = "reservation",
+}: PeriodFilterProps) {
   const dialogId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -98,7 +111,7 @@ export default function PeriodFilter({ dateFrom, dateTo, onChange, onApply, toda
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls={isOpen ? dialogId : undefined}
-        aria-label={`검사 기간: ${formatPeriodLabel(dateFrom, dateTo, today)}`}
+        aria-label={`${label}: ${formatPeriodLabel(dateFrom, dateTo, today)}`}
         onClick={() => (isOpen ? close() : open())}
         className={`inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg border bg-white pl-3 pr-2.5 text-sm font-medium tabular-nums transition-colors hover:bg-gray-50 ${
           hasPeriod ? "border-primary text-primary" : "border-line text-gray-700"
@@ -114,7 +127,7 @@ export default function PeriodFilter({ dateFrom, dateTo, onChange, onApply, toda
           ref={dialogRef}
           id={dialogId}
           role="dialog"
-          aria-label="검사 기간 선택"
+          aria-label={`${label} 선택`}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.stopPropagation();
@@ -145,14 +158,14 @@ export default function PeriodFilter({ dateFrom, dateTo, onChange, onApply, toda
           </div>
 
           <DatePicker
-            id="reservation-date-from"
+            id={`${idPrefix}-date-from`}
             label="시작일"
             value={dateFrom}
             onChange={(value) => onChange({ dateFrom: value, dateTo })}
             placeholder="시작일 선택"
           />
           <DatePicker
-            id="reservation-date-to"
+            id={`${idPrefix}-date-to`}
             label="종료일"
             value={dateTo}
             onChange={(value) => onChange({ dateFrom, dateTo: value })}
