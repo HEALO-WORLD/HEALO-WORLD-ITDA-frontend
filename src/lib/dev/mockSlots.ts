@@ -1,3 +1,4 @@
+import type { DailyOperatingHours } from "@/features/equipment/types";
 import type { ExamSlot, ExamType, PartnerOrganization } from "@/features/slots/types";
 import { addDays, getSeoulNow, getWeekday, parseDateKey, type DateKey } from "@/lib/date/seoulDate";
 
@@ -269,4 +270,45 @@ let cache: { baseDate: DateKey; slots: readonly ExamSlot[] } | null = null;
 export function getMockSlots(baseDate: DateKey = getSeoulNow().dateKey): readonly ExamSlot[] {
   if (cache?.baseDate !== baseDate) cache = { baseDate, slots: createMockSlots(baseDate) };
   return cache.slots;
+}
+
+/* ───────────── 검사기관 화면용 조회 (생성 규칙과 같은 원본을 읽기만 한다) ───────────── */
+
+/** 슬롯 1개 길이(분). 시작 시각 목록이 30분 간격이다 */
+export const MOCK_SLOT_MINUTES = 30;
+
+const addMinutes = (time: string, minutes: number) => {
+  const [hour, minute] = time.split(":").map(Number);
+  const total = hour * 60 + minute + minutes;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+};
+
+/** 기관의 장비 목록 (슬롯 생성에 쓰는 장비와 같은 ID·이름) */
+export function getMockEquipmentsByOrganization(
+  organizationId: string,
+): { id: string; organizationId: string; name: string; examType: ExamType }[] {
+  return MOCK_EQUIPMENTS.filter((equipment) => equipment.organizationId === organizationId).map(
+    (equipment) => ({ ...equipment }),
+  );
+}
+
+/** 기관의 요일별 운영 시간 (슬롯 생성의 운영 요일·시간 규칙에서 계산) */
+export function getMockOperatingHours(organizationId: string): DailyOperatingHours[] {
+  const organization = MOCK_ORGANIZATIONS.find(({ id }) => id === organizationId);
+  if (!organization) return [];
+
+  return Object.entries(organization.schedule)
+    .map(([weekday, hours]): DailyOperatingHours => {
+      const lastAm = AM_TIMES[AM_TIMES.length - 1];
+      const lastPm = PM_TIMES[PM_TIMES.length - 1];
+      return hours === "AM"
+        ? { weekday: Number(weekday), open: AM_TIMES[0], close: addMinutes(lastAm, MOCK_SLOT_MINUTES) }
+        : {
+            weekday: Number(weekday),
+            open: AM_TIMES[0],
+            close: addMinutes(lastPm, MOCK_SLOT_MINUTES),
+            breakTime: { start: addMinutes(lastAm, MOCK_SLOT_MINUTES), end: PM_TIMES[0] },
+          };
+    })
+    .sort((a, b) => a.weekday - b.weekday);
 }

@@ -25,3 +25,18 @@ const MOCK_SESSIONS: Record<OrganizationRole, SessionUser> = {
 export function getMockSession(role: OrganizationRole): SessionUser {
   return MOCK_SESSIONS[role];
 }
+
+/**
+ * ⚠️ 개발용 기관 ID 매핑 (실제 인증 아님)
+ *
+ * SessionUser에는 기관 ID가 없어서, 검사기관 화면이 Mock 슬롯 데이터(mockSlots.ts)의 기관과
+ * 연결될 수 있도록 역할별 기관 ID를 따로 둔다. 값은 위 세션의 organizationName과 같은 기관이다.
+ * 인증 연동 시 서버 세션의 기관 ID로 교체하고 이 매핑은 제거한다.
+ */
+const MOCK_ORGANIZATION_ID_BY_ROLE: Partial<Record<OrganizationRole, string>> = {
+  EXAMINING: "org-gaon", // 가온영상센터
+};
+
+export function getMockOrganizationId(role: OrganizationRole): string | null {
+  return MOCK_ORGANIZATION_ID_BY_ROLE[role] ?? null;
+}
