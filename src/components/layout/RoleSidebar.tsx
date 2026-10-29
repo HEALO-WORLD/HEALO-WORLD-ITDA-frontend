@@ -23,7 +23,7 @@ export default function RoleSidebar({ role }: RoleSidebarProps) {
       <nav aria-label="주 메뉴" className="sticky top-[72px] px-3 py-6">
         <ul className="flex flex-col gap-1">
           {items.map(({ label, href, icon: Icon }) => {
-            // 상세 와이어프레임이 없는 메뉴(대시보드, 검사기관 알림)는 비활성 표시만 한다
+            // 상세 와이어프레임이 없는 메뉴(검사기관 알림)는 비활성 표시만 한다
             if (!href) {
               return (
                 <li key={label}>

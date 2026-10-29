@@ -1,11 +1,4 @@
-import {
-  BellIcon,
-  CalendarIcon,
-  DocumentIcon,
-  HomeIcon,
-  SearchIcon,
-  WrenchIcon,
-} from "@/components/icons";
+import { BellIcon, CalendarIcon, DocumentIcon, SearchIcon, WrenchIcon } from "@/components/icons";
 import type { OrganizationRole } from "@/types/auth";
 import type { NavItem } from "@/types/navigation";
 
@@ -25,9 +18,8 @@ export const ROUTES = {
   },
 } as const;
 
-/** 의뢰기관 사이드바 (screen-spec 2.2) */
+/** 의뢰기관 사이드바 (screen-spec 2.2, 대시보드는 MVP 범위에서 제외) */
 const REFERRING_NAV: NavItem[] = [
-  { label: "대시보드", icon: HomeIcon },
   { label: "검사 슬롯 검색", icon: SearchIcon, href: ROUTES.referring.slots },
   { label: "의뢰·예약 관리", icon: CalendarIcon, href: ROUTES.referring.referrals },
   { label: "재조정·알림", icon: BellIcon, href: ROUTES.referring.notifications },
@@ -47,7 +39,10 @@ export const NAV_ITEMS_BY_ROLE: Record<OrganizationRole, NavItem[]> = {
   EXAMINING: EXAMINING_NAV,
 };
 
-/** 역할별 초기 진입 화면 */
+/**
+ * 역할별 초기 진입 화면 (`/referring`·`/examining` 진입, 개발용 역할 바로가기, 추후 로그인 후 이동)
+ * TODO(examining): 확정 예약 관리(S06) 구현 후 검사기관 기본 화면을 ROUTES.examining.reservations로 바꾼다.
+ */
 export const HOME_ROUTE_BY_ROLE: Record<OrganizationRole, string> = {
   REFERRING: ROUTES.referring.slots,
   EXAMINING: ROUTES.examining.equipment,
