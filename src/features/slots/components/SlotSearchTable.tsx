@@ -1,0 +1,58 @@
+import { formatDateTimeWithWeekday } from "@/lib/format/date";
+
+import type { ExamSlot } from "../types";
+
+import SlotStatusBadge from "./SlotStatusBadge";
+
+interface SlotSearchTableProps {
+  slots: ExamSlot[];
+  /** 예약 요청 클릭 시 슬롯 식별자를 전달한다 */
+  onRequestReservation: (slotId: string) => void;
+}
+
+const thClass = "px-7 py-5 text-left text-[15px] font-semibold text-gray-700";
+const tdClass = "px-7 py-6 text-[15px] text-gray-900";
+
+export default function SlotSearchTable({ slots, onRequestReservation }: SlotSearchTableProps) {
+  return (
+    <div className="overflow-x-auto rounded-lg border border-line">
+      <table className="w-full min-w-[880px] border-collapse">
+        <thead className="bg-gray-100/80">
+          <tr>
+            <th scope="col" className={thClass}>검사기관</th>
+            <th scope="col" className={thClass}>검사 장비</th>
+            <th scope="col" className={thClass}>검사 유형</th>
+            <th scope="col" className={thClass}>검사 일시</th>
+            <th scope="col" className={`${thClass} text-center`}>상태</th>
+            <th scope="col" className={`${thClass} text-center`}>선택</th>
+          </tr>
+        </thead>
+        <tbody>
+          {slots.map((slot) => (
+            <tr key={slot.id} className="border-t border-line">
+              <td className={`${tdClass} whitespace-nowrap`}>{slot.organizationName}</td>
+              <td className={`${tdClass} whitespace-nowrap`}>{slot.equipmentName}</td>
+              <td className={tdClass}>{slot.examType}</td>
+              <td className={`${tdClass} whitespace-nowrap`}>
+                {formatDateTimeWithWeekday(slot.startAt)}
+              </td>
+              <td className={`${tdClass} text-center`}>
+                <SlotStatusBadge isAvailable={slot.isAvailable} />
+              </td>
+              <td className={`${tdClass} text-center`}>
+                <button
+                  type="button"
+                  disabled={!slot.isAvailable}
+                  onClick={() => onRequestReservation(slot.id)}
+                  className="h-12 w-[136px] rounded-lg bg-primary text-[15px] font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+                >
+                  예약 요청
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
