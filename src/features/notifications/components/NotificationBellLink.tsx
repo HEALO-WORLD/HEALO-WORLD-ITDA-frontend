@@ -1,8 +1,7 @@
 "use client";
 
+import { Bell } from "lucide-react";
 import Link from "next/link";
-
-import { BellIcon } from "@/components/icons";
 
 import { useNotificationRead } from "./NotificationReadProvider";
 
@@ -23,7 +22,7 @@ export default function NotificationBellLink({ href, fallbackHasUnread }: Notifi
       className="relative rounded-md p-1 text-gray-700 hover:bg-gray-100"
       aria-label={hasUnread ? "알림 (읽지 않은 알림 있음)" : "알림"}
     >
-      <BellIcon className="size-6" />
+      <Bell className="size-6" strokeWidth={1.8} aria-hidden="true" />
       {hasUnread && (
         <span className="absolute right-1 top-0.5 size-2 rounded-full bg-primary ring-2 ring-white" />
       )}

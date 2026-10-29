@@ -1,4 +1,5 @@
-import { BellIcon, CalendarIcon, DocumentIcon, SearchIcon, WrenchIcon } from "@/components/icons";
+import { Bell, CalendarDays, FileText, Search, Wrench } from "lucide-react";
+
 import type { OrganizationRole } from "@/types/auth";
 import type { NavItem } from "@/types/navigation";
 
@@ -20,18 +21,18 @@ export const ROUTES = {
 
 /** 의뢰기관 사이드바 (screen-spec 2.2, 대시보드는 MVP 범위에서 제외) */
 const REFERRING_NAV: NavItem[] = [
-  { label: "검사 슬롯 검색", icon: SearchIcon, href: ROUTES.referring.slots },
-  { label: "의뢰·예약 관리", icon: CalendarIcon, href: ROUTES.referring.referrals },
-  { label: "재조정·알림", icon: BellIcon, href: ROUTES.referring.notifications },
+  { label: "검사 슬롯 검색", icon: Search, href: ROUTES.referring.slots },
+  { label: "의뢰·예약 관리", icon: CalendarDays, href: ROUTES.referring.referrals },
+  { label: "재조정·알림", icon: Bell, href: ROUTES.referring.notifications },
 ];
 
 /** 검사기관 사이드바 (screen-spec 2.3) */
 const EXAMINING_NAV: NavItem[] = [
-  { label: "장비·슬롯 운영", icon: CalendarIcon, href: ROUTES.examining.equipment },
-  { label: "확정 예약 관리", icon: CalendarIcon, href: ROUTES.examining.reservations },
-  { label: "장비 장애·재조정", icon: WrenchIcon, href: ROUTES.examining.incidents },
-  { label: "검사 진행·결과", icon: DocumentIcon, href: ROUTES.examining.examinations },
-  { label: "알림", icon: BellIcon },
+  { label: "장비·슬롯 운영", icon: CalendarDays, href: ROUTES.examining.equipment },
+  { label: "확정 예약 관리", icon: CalendarDays, href: ROUTES.examining.reservations },
+  { label: "장비 장애·재조정", icon: Wrench, href: ROUTES.examining.incidents },
+  { label: "검사 진행·결과", icon: FileText, href: ROUTES.examining.examinations },
+  { label: "알림", icon: Bell },
 ];
 
 export const NAV_ITEMS_BY_ROLE: Record<OrganizationRole, NavItem[]> = {

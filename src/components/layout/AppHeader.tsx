@@ -1,4 +1,5 @@
-import { BuildingIcon, ChevronDownIcon } from "@/components/icons";
+import { Building2, ChevronDown } from "lucide-react";
+
 import NotificationBellLink from "@/features/notifications/components/NotificationBellLink";
 import type { SessionUser } from "@/types/auth";
 
@@ -26,9 +27,9 @@ export default function AppHeader({ subtitle, user, notificationHref = null }: A
         <div className="flex items-center gap-5">
           {/* 계정 메뉴: 드롭다운 항목(로그아웃 등)은 인증 연동 시 확정 (screen-spec S01 확인 필요) */}
           <div className="flex items-center gap-2 text-[15px] font-medium text-gray-800">
-            <BuildingIcon className="size-5 text-gray-500" />
+            <Building2 className="size-5 text-gray-500" strokeWidth={1.8} aria-hidden="true" />
             <span>{user.roleLabel}</span>
-            <ChevronDownIcon className="size-4 text-gray-500" />
+            <ChevronDown className="size-4 text-gray-500" strokeWidth={1.8} aria-hidden="true" />
           </div>
 
           {notificationHref && (

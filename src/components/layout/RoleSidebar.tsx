@@ -32,7 +32,7 @@ export default function RoleSidebar({ role }: RoleSidebarProps) {
                     title="화면 범위 협의 중"
                     className={`${itemBase} cursor-not-allowed text-gray-400`}
                   >
-                    <Icon className="size-5" />
+                    <Icon className="size-5" strokeWidth={1.8} aria-hidden="true" />
                     {label}
                   </span>
                 </li>
@@ -58,7 +58,7 @@ export default function RoleSidebar({ role }: RoleSidebarProps) {
                       aria-hidden="true"
                     />
                   )}
-                  <Icon className="size-5" />
+                  <Icon className="size-5" strokeWidth={1.8} aria-hidden="true" />
                   {label}
                 </Link>
               </li>
