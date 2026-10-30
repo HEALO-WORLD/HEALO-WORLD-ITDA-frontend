@@ -16,6 +16,7 @@ export const ROUTES = {
     reservations: "/examining/reservations",
     incidents: "/examining/incidents",
     examinations: "/examining/examinations",
+    notifications: "/examining/notifications",
   },
 } as const;
 
@@ -32,7 +33,7 @@ const EXAMINING_NAV: NavItem[] = [
   { label: "확정 예약 관리", icon: CalendarDays, href: ROUTES.examining.reservations },
   { label: "장비 장애·재조정", icon: Wrench, href: ROUTES.examining.incidents },
   { label: "검사 진행·결과", icon: FileText, href: ROUTES.examining.examinations },
-  { label: "알림", icon: Bell },
+  { label: "알림", icon: Bell, href: ROUTES.examining.notifications },
 ];
 
 export const NAV_ITEMS_BY_ROLE: Record<OrganizationRole, NavItem[]> = {
@@ -49,8 +50,8 @@ export const HOME_ROUTE_BY_ROLE: Record<OrganizationRole, string> = {
   EXAMINING: ROUTES.examining.equipment,
 };
 
-/** 헤더 알림 아이콘이 이동할 화면. 검사기관 알림 화면은 범위 협의 중이므로 없음 */
+/** 헤더 알림 아이콘이 이동할 화면 */
 export const NOTIFICATION_ROUTE_BY_ROLE: Record<OrganizationRole, string | null> = {
   REFERRING: ROUTES.referring.notifications,
-  EXAMINING: null,
+  EXAMINING: ROUTES.examining.notifications,
 };

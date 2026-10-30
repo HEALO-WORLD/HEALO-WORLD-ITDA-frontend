@@ -3,17 +3,22 @@
 import { Bell } from "lucide-react";
 import Link from "next/link";
 
+import { useExaminingNotificationRead } from "@/features/examining-notifications/components/ExaminingNotificationReadProvider";
+
 import { useNotificationRead } from "./NotificationReadProvider";
 
 interface NotificationBellLinkProps {
   href: string;
-  /** 알림 상태를 공유하지 않는 화면(검사기관 등)에서 쓰는 값 */
+  /** 알림 읽음 상태 Provider가 없는 화면에서 쓰는 값 */
   fallbackHasUnread: boolean;
 }
 
 /** 헤더 알림 아이콘. 읽지 않은 알림이 있으면 점을 표시한다 */
 export default function NotificationBellLink({ href, fallbackHasUnread }: NotificationBellLinkProps) {
-  const context = useNotificationRead();
+  // 의뢰기관·검사기관은 각자의 레이아웃에 자기 Provider만 두므로 둘 중 하나만 값이 있다
+  const referringContext = useNotificationRead();
+  const examiningContext = useExaminingNotificationRead();
+  const context = referringContext ?? examiningContext;
   const hasUnread = context ? context.unreadCount > 0 : fallbackHasUnread;
 
   return (
