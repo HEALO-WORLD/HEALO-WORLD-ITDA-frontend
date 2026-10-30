@@ -1,5 +1,9 @@
+import type { ExamSlot } from "../types";
+
 interface SlotStatusBadgeProps {
   isAvailable: boolean;
+  /** 장비 장애로 막힌 슬롯이면 마감과 구분해 표시한다 */
+  blockedReason?: ExamSlot["blockedReason"];
 }
 
 /**
@@ -9,10 +13,12 @@ interface SlotStatusBadgeProps {
 const STATUS_META = {
   available: { label: "예약 가능", className: "bg-emerald-50 text-emerald-700" },
   closed: { label: "예약 마감", className: "bg-gray-100 text-gray-500" },
+  equipmentFailure: { label: "장비 장애", className: "bg-red-50 text-red-600" },
 } as const;
 
-export default function SlotStatusBadge({ isAvailable }: SlotStatusBadgeProps) {
-  const { label, className } = STATUS_META[isAvailable ? "available" : "closed"];
+export default function SlotStatusBadge({ isAvailable, blockedReason }: SlotStatusBadgeProps) {
+  const { label, className } =
+    STATUS_META[blockedReason === "EQUIPMENT_FAILURE" ? "equipmentFailure" : isAvailable ? "available" : "closed"];
 
   return (
     <span className={`inline-flex rounded-md px-4 py-1.5 text-[15px] font-medium ${className}`}>

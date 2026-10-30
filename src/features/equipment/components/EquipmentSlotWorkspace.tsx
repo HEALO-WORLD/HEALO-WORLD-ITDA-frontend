@@ -8,6 +8,7 @@ import type { ExamSlot } from "@/features/slots/types";
 import { addDays, addMonths, parseDateKey, type DateKey } from "@/lib/date/seoulDate";
 import { useSeoulNow } from "@/lib/date/useSeoulNow";
 import { formatDateTimeWithWeekday } from "@/lib/format/date";
+import { useFailedEquipmentIds } from "@/features/incidents/useMockIncidents";
 
 import { getOrganizationSlots, getSlotDataRange } from "../api";
 import {
@@ -19,6 +20,7 @@ import {
 } from "../dayStatus";
 import { addMinutesToTime } from "../operatingHours";
 import type { Equipment } from "../types";
+import { useLiveEquipments } from "../useLiveEquipments";
 
 import DaySlotList, { getSlotDisplayStatus, SLOT_STATUS_META } from "./DaySlotList";
 import EquipmentPicker, { type EquipmentSelection, type ExamTypeFilter } from "./EquipmentPicker";
@@ -60,8 +62,16 @@ const compareSlots = (a: ExamSlot, b: ExamSlot) =>
  *   선택 날짜를 더 고를 수 없게 되면 선택을 해제하고 목록에 이유를 안내한다.
  * - 처음에는 오늘 이후 가장 가까운 예약 가능 날짜를 고르고, 그 날짜가 있는 달을 함께 표시한다.
  */
-export default function EquipmentSlotWorkspace({ organizationId, equipments }: EquipmentSlotWorkspaceProps) {
+export default function EquipmentSlotWorkspace(props: EquipmentSlotWorkspaceProps) {
+  // 장애 장비가 바뀌면 슬롯 예약 가능 여부가 달라지므로, 캐시한 슬롯을 버리고 처음부터 다시 불러온다
+  const { key: failedEquipmentKey } = useFailedEquipmentIds();
+  return <Workspace key={failedEquipmentKey} {...props} />;
+}
+
+function Workspace({ organizationId, equipments: serverEquipments }: EquipmentSlotWorkspaceProps) {
   const now = useSeoulNow();
+  // 장비 상태는 장애 등록·복구(개발용 Mock 저장소)를 반영한 현재 값으로 본다
+  const equipments = useLiveEquipments(serverEquipments);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<ExamTypeFilter>("ALL");
   const [selection, setSelection] = useState<EquipmentSelection>("ALL");

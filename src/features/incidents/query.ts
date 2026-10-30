@@ -1,5 +1,3 @@
-import type { Reservation } from "@/features/reservations/types";
-
 import type { IncidentRecord, IncidentSearchCriteria, IncidentSummaryCounts } from "./types";
 
 /** 검색 조건 전체 해제 상태 (과거 이력까지 모두 보인다) */
@@ -42,15 +40,18 @@ export function sortIncidents(incidents: readonly IncidentRecord[]): IncidentRec
   );
 }
 
-/** 장애 현황 요약 (검색 조건과 무관하게 현재 기관 전체 기준) */
+/**
+ * 장애 현황 요약 (검색 조건과 무관하게 현재 기관 전체 기준).
+ * 재조정 필요 예약 수는 예약 데이터에서 따로 센 값을 받는다 (장애 등록·복구가 예약 상태를 바꾸지 않는다)
+ */
 export function summarizeIncidents(
   incidents: readonly IncidentRecord[],
-  reservations: readonly Reservation[],
+  rescheduleRequiredCount: number,
 ): IncidentSummaryCounts {
   return {
     activeEquipmentCount: new Set(incidents.filter(({ status }) => status === "ACTIVE").map(({ equipmentId }) => equipmentId))
       .size,
     resolvedIncidentCount: incidents.filter(({ status }) => status === "RESOLVED").length,
-    rescheduleRequiredCount: reservations.filter(({ status }) => status === "RESCHEDULE_REQUIRED").length,
+    rescheduleRequiredCount,
   };
 }

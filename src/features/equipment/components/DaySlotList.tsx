@@ -8,17 +8,22 @@ import { formatDateLong } from "@/lib/format/date";
 
 import { addMinutesToTime } from "../operatingHours";
 
-/** 화면 표시용 슬롯 상태 (isAvailable과 시작 시각으로만 판단, 그 외 상태는 만들지 않는다) */
-export type SlotDisplayStatus = "AVAILABLE" | "UNAVAILABLE" | "PAST";
+/**
+ * 화면 표시용 슬롯 상태 (isAvailable·시작 시각·장비 장애 차단으로만 판단, 그 외 상태는 만들지 않는다)
+ * EQUIPMENT_FAILURE = 원래 예약 가능했지만 장비 장애(진행 중)로 막힌 슬롯
+ */
+export type SlotDisplayStatus = "AVAILABLE" | "UNAVAILABLE" | "EQUIPMENT_FAILURE" | "PAST";
 
 export function getSlotDisplayStatus(slot: ExamSlot, nowDateTime: string): SlotDisplayStatus {
   if (!isUpcomingSlot(slot, nowDateTime)) return "PAST";
+  if (slot.blockedReason === "EQUIPMENT_FAILURE") return "EQUIPMENT_FAILURE";
   return slot.isAvailable ? "AVAILABLE" : "UNAVAILABLE";
 }
 
 export const SLOT_STATUS_META: Record<SlotDisplayStatus, { label: string; className: string }> = {
   AVAILABLE: { label: "예약 가능", className: "bg-primary-soft text-primary" },
   UNAVAILABLE: { label: "예약 불가", className: "bg-gray-100 text-gray-600" },
+  EQUIPMENT_FAILURE: { label: "장비 장애", className: "bg-red-50 text-red-600" },
   PAST: { label: "지난 시간", className: "bg-white text-gray-400 ring-1 ring-inset ring-line" },
 };
 

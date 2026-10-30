@@ -38,6 +38,12 @@ export interface ReferralSummary {
   requestedAt: string;
 }
 
+/**
+ * 의뢰 생성 모달에서 사용자가 직접 입력하는 값 (슬롯에서 정해지는 유형·기관·슬롯 ID 제외).
+ * 장비 장애로 모달이 중단되면 화면 메모리에만 잠시 보관한다 (브라우저 저장소에 저장하지 않는다)
+ */
+export type ReferralDraft = Pick<ReferralFormInput, "virtualPatientId" | "purpose">;
+
 /** 의뢰 요청 입력값 */
 export interface ReferralFormInput {
   virtualPatientId: string;

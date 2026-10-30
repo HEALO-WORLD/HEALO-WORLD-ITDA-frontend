@@ -1,7 +1,9 @@
+import { getFailedEquipmentIds } from "@/features/incidents/mockIncidentStore";
 import { getSeoulNow } from "@/lib/date/seoulDate";
 import { getMockSlots, MOCK_PARTNER_ORGANIZATIONS } from "@/lib/dev/mockSlots";
 
 import {
+  applyEquipmentFailures,
   buildDateAvailability,
   isBookableSlot,
   isUpcomingSlot,
@@ -34,10 +36,16 @@ export interface SlotQueryOptions {
   excludedEquipmentIds?: readonly string[];
 }
 
+/** 장애 장비 미래 슬롯을 예약 불가로 계산한 Mock 슬롯 (검색·달력·단건 조회 공통) */
+function getMockSlotsWithFailures(): ExamSlot[] {
+  const { dateKey, dateTime } = getSeoulNow();
+  return applyEquipmentFailures(getMockSlots(dateKey), getFailedEquipmentIds(), dateTime);
+}
+
 /** 제외 장비를 뺀 Mock 슬롯 */
 function getQueryableSlots({ excludedEquipmentIds = [] }: SlotQueryOptions): ExamSlot[] {
-  const slots = getMockSlots(getSeoulNow().dateKey);
-  if (excludedEquipmentIds.length === 0) return [...slots];
+  const slots = getMockSlotsWithFailures();
+  if (excludedEquipmentIds.length === 0) return slots;
   return slots.filter((slot) => !excludedEquipmentIds.includes(slot.equipmentId));
 }
 
@@ -71,7 +79,8 @@ export async function searchSlots(
  * 지난 시간·마감 여부는 걸러내지 않는다 (호출하는 쪽에서 판단).
  */
 export async function getSlotById(slotId: string): Promise<ExamSlot | null> {
-  return getMockSlots(getSeoulNow().dateKey).find((slot) => slot.id === slotId) ?? null;
+  // 예약 요청 직전 재검증에 쓰이므로 장애 장비 차단도 함께 반영한다
+  return getMockSlotsWithFailures().find((slot) => slot.id === slotId) ?? null;
 }
 
 /** 달력에 표시할 날짜별 예약 가능 여부 (검사 유형·기관·시간대 기준) */

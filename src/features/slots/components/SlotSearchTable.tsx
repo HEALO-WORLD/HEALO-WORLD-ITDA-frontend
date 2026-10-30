@@ -43,7 +43,7 @@ export default function SlotSearchTable({
                 {formatDateTimeWithWeekday(slot.startAt)}
               </td>
               <td className={`${tdClass} text-center`}>
-                <SlotStatusBadge isAvailable={slot.isAvailable} />
+                <SlotStatusBadge isAvailable={slot.isAvailable} blockedReason={slot.blockedReason} />
               </td>
               <td className={`${tdClass} text-center`}>
                 <button
