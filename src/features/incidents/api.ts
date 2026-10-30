@@ -9,8 +9,8 @@ import type { EquipmentIncident, IncidentRecord } from "./types";
  *
  * TODO(api): 장비 장애 조회 API가 확정되면 함수 시그니처는 유지하고 내부만 Gateway 호출로 교체한다.
  * - 기관 권한 필터링은 서버가 한다 (지금은 기관 ID로 거른다)
- * - 장비 현재 상태는 지금 getEquipments의 재조정 알림 기반 추정을 그대로 쓴다.
- *   장비·장애 API 연동 시 장비 상태는 그 API 값으로 교체하고, 추정 로직은 제거한다.
+ * - 여기서는 원본 Mock 장애만 본다. 화면에서 등록·복구한 장애와 현재 장비 상태는
+ *   IncidentBoard가 개발용 Mock 저장소(mockIncidentStore.ts)를 합쳐 계산한다.
  * - 영향 예약은 장애 데이터에 명시된 예약 ID만 사용한다 (장비명·검사 유형으로 추정하지 않는다)
  */
 

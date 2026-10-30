@@ -42,6 +42,26 @@ export function isUpcomingSlot(slot: ExamSlot, nowDateTime: string): boolean {
   return slot.startAt > nowDateTime;
 }
 
+/**
+ * 진행 중 장애가 있는 장비의 미래 슬롯을 예약 불가로 계산한다 (원본 슬롯은 바꾸지 않고 새 객체를 만든다).
+ * - 장비 ID로만 판단한다 (다른 장비·기관 슬롯은 그대로)
+ * - 원래 예약 가능한 슬롯만 막고 blockedReason을 붙인다. 원래 마감된 슬롯은 그대로 둔다
+ * - 장애가 복구되면 이 계산에서 빠져 원래 예약 가능 상태로 돌아간다
+ * TODO(api): 서버가 장애 장비 슬롯의 예약 가능 여부를 내려주면 이 계산을 제거한다.
+ */
+export function applyEquipmentFailures(
+  slots: readonly ExamSlot[],
+  failedEquipmentIds: ReadonlySet<string>,
+  nowDateTime: string,
+): ExamSlot[] {
+  if (failedEquipmentIds.size === 0) return [...slots];
+  return slots.map((slot) =>
+    slot.isAvailable && failedEquipmentIds.has(slot.equipmentId) && isUpcomingSlot(slot, nowDateTime)
+      ? { ...slot, isAvailable: false, blockedReason: "EQUIPMENT_FAILURE" }
+      : slot,
+  );
+}
+
 export function isBookableSlot(slot: ExamSlot, nowDateTime: string): boolean {
   return slot.isAvailable && isUpcomingSlot(slot, nowDateTime);
 }

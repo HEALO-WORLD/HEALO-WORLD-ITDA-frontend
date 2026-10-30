@@ -2,13 +2,12 @@ import PageHeader from "@/components/layout/PageHeader";
 import { getCurrentExaminingOrganizationId, getEquipments } from "@/features/equipment/api";
 import { getIncidentRecords, IS_MOCK_DATA } from "@/features/incidents/api";
 import IncidentBoard from "@/features/incidents/components/IncidentBoard";
-import { summarizeIncidents } from "@/features/incidents/query";
 import { getReceivedReservations } from "@/features/reservations/api";
 
 /**
- * 장비 장애·재조정 (S07) — 조회 중심 MVP.
+ * 장비 장애·재조정 (S07).
  * 현재 검사기관(개발용 세션 매핑)의 장애 이력·장비·예약을 서버에서 기관 ID로 골라 넘기고,
- * 검색·상세 보기는 클라이언트에서 한다. 장애 등록·복구·재조정 처리는 API 연동 후 제공한다.
+ * 검색·상세·장애 등록·복구(개발용 Mock)는 클라이언트에서 한다. 예약 재조정·알림 발송은 API 연동 후 제공한다.
  */
 export default async function IncidentsPage() {
   const organizationId = await getCurrentExaminingOrganizationId();
@@ -30,9 +29,10 @@ export default async function IncidentsPage() {
       )}
       {organizationId ? (
         <IncidentBoard
-          incidents={incidents}
+          organizationId={organizationId}
+          baseIncidents={incidents}
           equipments={equipments.map(({ id, name, examType }) => ({ id, name, examType }))}
-          summary={summarizeIncidents(incidents, reservations)}
+          rescheduleRequiredCount={reservations.filter(({ status }) => status === "RESCHEDULE_REQUIRED").length}
         />
       ) : (
         <p role="status" className="rounded-xl border border-dashed border-line bg-white px-6 py-16 text-center text-[15px] text-gray-500">

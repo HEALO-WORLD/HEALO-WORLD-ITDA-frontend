@@ -43,7 +43,7 @@ export default function IncidentTable({ rows, selectedId, onSelect, emptyMessage
   return (
     <div className="overflow-x-auto rounded-lg border border-line">
       {/* 고정 열 너비: 일시·상태·버튼은 잘리지 않게, 장비명은 남는 폭에서 말줄임 */}
-      <table className="w-full min-w-[900px] table-fixed border-collapse">
+      <table className="w-full min-w-[1000px] table-fixed border-collapse">
         <colgroup>
           <col className="w-[104px]" />
           <col />
