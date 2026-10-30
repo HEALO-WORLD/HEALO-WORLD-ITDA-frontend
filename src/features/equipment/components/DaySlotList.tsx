@@ -1,4 +1,4 @@
-import { CalendarX2, Clock } from "lucide-react";
+import { CalendarX2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { isUpcomingSlot } from "@/features/slots/availability";
@@ -11,12 +11,14 @@ import { addMinutesToTime } from "../operatingHours";
 /**
  * 화면 표시용 슬롯 상태 (isAvailable·시작 시각·장비 장애 차단으로만 판단, 그 외 상태는 만들지 않는다)
  * EQUIPMENT_FAILURE = 원래 예약 가능했지만 장비 장애(진행 중)로 막힌 슬롯
+ * SUSPENDED = 검사기관이 운영 중단한 슬롯 (생성한 슬롯만)
  */
-export type SlotDisplayStatus = "AVAILABLE" | "UNAVAILABLE" | "EQUIPMENT_FAILURE" | "PAST";
+export type SlotDisplayStatus = "AVAILABLE" | "UNAVAILABLE" | "EQUIPMENT_FAILURE" | "SUSPENDED" | "PAST";
 
 export function getSlotDisplayStatus(slot: ExamSlot, nowDateTime: string): SlotDisplayStatus {
   if (!isUpcomingSlot(slot, nowDateTime)) return "PAST";
   if (slot.blockedReason === "EQUIPMENT_FAILURE") return "EQUIPMENT_FAILURE";
+  if (slot.blockedReason === "OPERATOR_SUSPENDED") return "SUSPENDED";
   return slot.isAvailable ? "AVAILABLE" : "UNAVAILABLE";
 }
 
@@ -24,6 +26,7 @@ export const SLOT_STATUS_META: Record<SlotDisplayStatus, { label: string; classN
   AVAILABLE: { label: "예약 가능", className: "bg-primary-soft text-primary" },
   UNAVAILABLE: { label: "예약 불가", className: "bg-gray-100 text-gray-600" },
   EQUIPMENT_FAILURE: { label: "장비 장애", className: "bg-red-50 text-red-600" },
+  SUSPENDED: { label: "운영 중단", className: "bg-gray-100 text-gray-500 line-through decoration-gray-400" },
   PAST: { label: "지난 시간", className: "bg-white text-gray-400 ring-1 ring-inset ring-line" },
 };
 
@@ -53,7 +56,11 @@ interface DaySlotListProps {
   onSelectSlot: (slot: ExamSlot) => void;
 }
 
-/** 선택 날짜의 슬롯 목록 */
+/**
+ * 선택 날짜의 슬롯 (간결한 표).
+ * 슬롯이 많아도 행 높이를 낮게 두고, 목록 안에서만 세로 스크롤하며 머리글은 고정한다 (모든 슬롯을 볼 수 있다).
+ * 행이나 [상세]를 누르면 슬롯 상세(운영 중단·재개 포함)를 연다.
+ */
 export default function DaySlotList({
   date,
   state,
@@ -71,12 +78,13 @@ export default function DaySlotList({
     <section aria-labelledby="day-slot-title" className="flex min-w-0 flex-col rounded-xl border border-line bg-white px-4 pb-4 pt-5 sm:px-5">
       <div className="mb-3">
         <h2 id="day-slot-title" className="text-lg font-bold text-gray-900">
-          {date ? formatDateLong(date) : "날짜를 선택해 주세요"}
+          선택 날짜의 슬롯
         </h2>
-        <p className="text-sm text-gray-500">
-          {scopeLabel}
+        <p className="mt-0.5 text-[15px] font-semibold text-gray-800">{date ? formatDateLong(date) : "날짜를 선택해 주세요"}</p>
+        <p className="text-sm text-gray-500" aria-live="polite">
+          <span className="break-all">{scopeLabel}</span>
           {state.kind === "READY" && slots.length > 0 && (
-            <> · 슬롯 {slots.length}건 · 예약 가능 {availableCount}건</>
+            <> · 전체 {slots.length}건 · 예약 가능 {availableCount}건</>
           )}
         </p>
       </div>
@@ -97,44 +105,83 @@ export default function DaySlotList({
             : "이 날짜에는 슬롯이 없습니다."}
         </EmptyMessage>
       ) : (
-        <ul className="flex max-h-[480px] flex-col gap-1.5 overflow-y-auto">
-          {slots.map((slot) => {
-            const status = getSlotDisplayStatus(slot, nowDateTime);
-            const { label, className } = SLOT_STATUS_META[status];
-            const start = slot.startAt.slice(11, 16);
-            const end = addMinutesToTime(start, slotMinutes.get(slot.equipmentId) ?? 30);
-            return (
-              <li key={slot.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelectSlot(slot)}
-                  aria-label={`${start}~${end} ${slot.equipmentName} ${slot.examType} ${label}`}
-                  className={`flex w-full items-center gap-3 rounded-lg border border-line px-3 py-2.5 text-left hover:border-primary/50 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-primary ${
-                    status === "PAST" ? "opacity-70" : ""
-                  }`}
-                >
-                  <span className="flex shrink-0 items-center gap-1.5 text-[15px] font-semibold tabular-nums text-gray-900">
-                    <Clock className="size-4 text-gray-400" aria-hidden="true" />
-                    {start}
-                    <span className="font-normal text-gray-400">~{end}</span>
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span
-                      className={`block truncate text-sm ${singleEquipmentName ? "text-gray-500" : "font-medium text-gray-800"}`}
-                      title={slot.equipmentName}
-                    >
-                      {slot.equipmentName}
-                    </span>
-                    <span className="text-xs text-gray-500">{slot.examType}</span>
-                  </span>
-                  <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
-                    {label}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="@container max-h-[560px] overflow-auto rounded-lg border border-line">
+          {/*
+            한 장비만 볼 때는 장비명을 위 제목에서 보여 주므로 장비명 열을 뺀다.
+            전체 보기라도 목록 폭이 좁으면(컨테이너 기준) 장비명을 시간 아래 줄로 옮겨 상태·관리가 가로 스크롤 없이 보이게 한다.
+            그보다 더 좁으면 최소 폭을 지키고 가로 스크롤한다.
+          */}
+          <table className="w-full min-w-[240px] table-fixed border-collapse text-sm">
+            {/* 스크롤해도 머리글은 위에 고정 */}
+            <thead className="sticky top-0 z-[1] bg-gray-100">
+              <tr>
+                <th scope="col" className="w-[104px] px-2.5 py-2 text-left font-semibold text-gray-700">시간</th>
+                {!singleEquipmentName && (
+                  <th scope="col" className="hidden px-2 py-2 text-left font-semibold text-gray-700 @min-[360px]:table-cell">
+                    장비명
+                  </th>
+                )}
+                <th scope="col" className="w-[84px] px-2 py-2 text-left font-semibold text-gray-700">상태</th>
+                <th scope="col" className="w-[52px] px-2 py-2 text-center font-semibold text-gray-700">관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {slots.map((slot) => {
+                const status = getSlotDisplayStatus(slot, nowDateTime);
+                const { label, className } = SLOT_STATUS_META[status];
+                const start = slot.startAt.slice(11, 16);
+                const end = addMinutesToTime(start, slotMinutes.get(slot.equipmentId) ?? 30);
+                return (
+                  <tr
+                    key={slot.id}
+                    onClick={() => onSelectSlot(slot)}
+                    className={`cursor-pointer border-t border-line hover:bg-gray-50 ${status === "PAST" ? "text-gray-400" : ""}`}
+                  >
+                    <td className="whitespace-nowrap px-2.5 py-1 font-semibold tabular-nums text-gray-900">
+                      {start}
+                      <span className="font-normal text-gray-400">~{end}</span>
+                      {!singleEquipmentName && (
+                        <span
+                          className="block truncate text-xs font-medium text-gray-600 @min-[360px]:hidden"
+                          title={`${slot.equipmentName} · ${slot.examType}`}
+                        >
+                          {slot.equipmentName}
+                        </span>
+                      )}
+                    </td>
+                    {!singleEquipmentName && (
+                      <td
+                        className="hidden truncate px-2 py-1 font-medium text-gray-800 @min-[360px]:table-cell"
+                        title={`${slot.equipmentName} · ${slot.examType}`}
+                      >
+                        {slot.equipmentName}
+                      </td>
+                    )}
+                    <td className="px-2 py-1">
+                      <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${className}`}>
+                        {label}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1 text-center">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onSelectSlot(slot);
+                        }}
+                        aria-label={`${start}~${end} ${slot.equipmentName} ${slot.examType} ${label} 상세 보기`}
+                        aria-haspopup="dialog"
+                        className="h-6 whitespace-nowrap rounded-md border border-line bg-white px-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-primary"
+                      >
+                        상세
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

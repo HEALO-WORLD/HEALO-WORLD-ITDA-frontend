@@ -4,6 +4,7 @@ import { CheckCircle2, Plus, RotateCcw, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import Modal from "@/components/ui/Modal";
+import { useLiveEquipments } from "@/features/equipment/useLiveEquipments";
 import { useSeoulNow } from "@/lib/date/useSeoulNow";
 
 import { resetMockIncidentChanges, resolveMockIncident } from "../mockIncidentStore";
@@ -29,8 +30,6 @@ interface IncidentBoardProps {
   organizationId: string;
   /** 서버에서 원본 Mock 기준으로 만든 장애 목록 (장비·영향 예약 정보 포함) */
   baseIncidents: IncidentRecord[];
-  /** 현재 검사기관 장비 (장비 필터·등록 선택지) */
-  equipments: IncidentEquipmentOption[];
   /** 우리 기관이 받은 예약 중 재조정 필요 상태 (예약 데이터 기준, 장애 등록·복구와 무관) */
   rescheduleRequiredCount: number;
 }
@@ -44,10 +43,15 @@ interface IncidentBoardProps {
 export default function IncidentBoard({
   organizationId,
   baseIncidents,
-  equipments,
   rescheduleRequiredCount,
 }: IncidentBoardProps) {
   const now = useSeoulNow();
+  // 장비 필터·등록 선택지: 원본 장비 + 장비·슬롯 운영 화면에서 등록한 장비 (현재 기관만)
+  const liveEquipments = useLiveEquipments(organizationId);
+  const equipments = useMemo<IncidentEquipmentOption[]>(
+    () => liveEquipments.map(({ id, name, examType }) => ({ id, name, examType })),
+    [liveEquipments],
+  );
   const effectiveIncidents = useEffectiveIncidents();
   const { ids: failedEquipmentIds } = useFailedEquipmentIds();
   const changeCount = useIncidentChangeCount();

@@ -9,6 +9,7 @@ import { ROUTES } from "@/constants/navigation";
 import ReferralCreateForm from "@/features/referrals/components/ReferralCreateForm";
 import RescheduleSlotConfirm from "@/features/referrals/components/RescheduleSlotConfirm";
 import type { ReferralDraft, ReferralSummary } from "@/features/referrals/types";
+import { useSlotDataKey } from "@/features/equipment/useLiveEquipments";
 import { useFailedEquipmentIds } from "@/features/incidents/useMockIncidents";
 import type { RescheduleCause } from "@/features/notifications/types";
 import { formatDateTimeWithWeekday } from "@/lib/format/date";
@@ -109,11 +110,13 @@ export default function SlotSearch({
     }
   }
 
-  // 그 밖의 장애 변경: 표시 중인 결과만 같은 조건으로 다시 불러온다 (결과가 없거나 위에서 비웠으면 그대로)
-  const refreshedKeyRef = useRef(failedEquipmentKey);
+  // 그 밖의 변경(다른 장비 장애·복구, 검사기관의 슬롯 생성·운영 중단 등): 표시 중인 결과만 같은 조건으로
+  // 다시 불러온다 (결과가 없거나 위에서 비웠으면 그대로)
+  const slotDataKey = useSlotDataKey();
+  const refreshedKeyRef = useRef(slotDataKey);
   useEffect(() => {
-    if (refreshedKeyRef.current === failedEquipmentKey) return;
-    refreshedKeyRef.current = failedEquipmentKey;
+    if (refreshedKeyRef.current === slotDataKey) return;
+    refreshedKeyRef.current = slotDataKey;
     const criteria = lastCriteriaRef.current;
     if (!criteria) return;
     let isCurrent = true;
@@ -125,7 +128,7 @@ export default function SlotSearch({
     return () => {
       isCurrent = false;
     };
-  }, [failedEquipmentKey, excludedEquipmentIds]);
+  }, [slotDataKey, excludedEquipmentIds]);
 
   // 모달(자식)이 닫힌 뒤 안내로 포커스를 옮긴다
   useEffect(() => {

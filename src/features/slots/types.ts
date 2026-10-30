@@ -29,10 +29,11 @@ export interface ExamSlot {
   /** 예약 가능 여부. 서버는 상태 enum(HOLD 등)으로 내려줄 수 있어 확인 필요 */
   isAvailable: boolean;
   /**
-   * 원래 예약 가능했지만 막힌 이유. 장비 장애(진행 중)로 막힌 미래 슬롯만 EQUIPMENT_FAILURE이며,
-   * 원래 마감된 슬롯에는 붙이지 않는다 (applyEquipmentFailures 참고)
+   * 원래 예약 가능했지만 막힌 이유 (원래 마감된 슬롯에는 붙이지 않는다).
+   * - EQUIPMENT_FAILURE: 장비 장애(진행 중)로 막힌 미래 슬롯 (applyEquipmentFailures 참고)
+   * - OPERATOR_SUSPENDED: 검사기관이 운영 중단한 슬롯 (개발용 Mock에서 생성한 슬롯만 해당)
    */
-  blockedReason?: "EQUIPMENT_FAILURE";
+  blockedReason?: "EQUIPMENT_FAILURE" | "OPERATOR_SUSPENDED";
 }
 
 /** 시간대. 슬롯 검사 시작 시각 기준 (오전: 12:00 이전, 오후: 12:00부터) */

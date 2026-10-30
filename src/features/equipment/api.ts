@@ -4,13 +4,10 @@ import type { ExamSlot } from "@/features/slots/types";
 import { addDays, getSeoulNow, type DateKey } from "@/lib/date/seoulDate";
 import { getMockOrganizationId } from "@/lib/dev/mockSession";
 import {
-  getMockEquipmentsByOrganization,
-  getMockOperatingHours,
-  getMockSlots,
   MOCK_RANGE_DAYS,
-  MOCK_SLOT_MINUTES,
 } from "@/lib/dev/mockSlots";
 
+import { getEffectiveEquipments, getAllMockSlots } from "./mockEquipmentStore";
 import type { Equipment } from "./types";
 
 /**
@@ -31,19 +28,21 @@ export async function getCurrentExaminingOrganizationId(): Promise<string | null
 /**
  * 기관 장비 목록.
  * 장비 상태: 진행 중(ACTIVE) 장애가 있는 장비만 FAILURE로 표시한다 (장애 이력 기준, 재조정 알림으로 추정하지 않는다).
- * 서버에서는 원본 Mock 장애만 보므로, 화면에서 등록·복구한 변경분은 Client Component가
+ * 장비 목록·운영 시간은 원본 Mock + 화면에서 등록·수정한 내용(개발용 Mock 저장소)이다.
+ * 서버에서는 원본 Mock만 보이므로, 화면의 변경분은 Client Component가
  * useLiveEquipments(features/equipment/useLiveEquipments.ts)로 반영한다.
- * TODO(api): 장비 조회 API의 장비 상태 값으로 교체한다.
+ * TODO(api): 장비 조회 API의 장비·운영 시간·상태 값으로 교체한다.
  */
 export async function getEquipments(organizationId: string): Promise<Equipment[]> {
   const failedEquipmentIds = getFailedEquipmentIds();
-  const operatingHours = getMockOperatingHours(organizationId);
-
-  return getMockEquipmentsByOrganization(organizationId).map((equipment) => ({
-    ...equipment,
+  return getEffectiveEquipments(organizationId).map((equipment) => ({
+    id: equipment.id,
+    organizationId: equipment.organizationId,
+    name: equipment.name,
+    examType: equipment.examType,
+    operatingHours: equipment.operatingHours,
+    slotMinutes: equipment.slotMinutes,
     status: failedEquipmentIds.has(equipment.id) ? "FAILURE" : "NORMAL",
-    operatingHours,
-    slotMinutes: MOCK_SLOT_MINUTES,
   }));
 }
 
@@ -54,7 +53,7 @@ export function getSlotDataRange(today: DateKey = getSeoulNow().dateKey): { star
 
 /**
  * 기관 슬롯 조회 (기간 `from`~`to`, 양 끝 포함).
- * 의뢰기관 슬롯 검색과 같은 Mock 생성기·캐시를 쓰므로 같은 장비·일시의 상태가 항상 같다.
+ * 의뢰기관 슬롯 검색과 같은 Mock(원본 + 생성한 슬롯)을 쓰므로 같은 장비·일시의 상태가 항상 같다.
  * 진행 중 장애 장비의 미래 슬롯은 의뢰기관 검색과 같은 규칙으로 예약 불가로 계산한다.
  */
 export async function getOrganizationSlots(
@@ -62,8 +61,8 @@ export async function getOrganizationSlots(
   from: DateKey,
   to: DateKey,
 ): Promise<ExamSlot[]> {
-  const { dateKey, dateTime } = getSeoulNow();
-  return applyEquipmentFailures(getMockSlots(dateKey), getFailedEquipmentIds(), dateTime)
+  const { dateTime } = getSeoulNow();
+  return applyEquipmentFailures(getAllMockSlots(), getFailedEquipmentIds(), dateTime)
     .filter((slot) => {
       const dateKey = slot.startAt.slice(0, 10);
       return slot.organizationId === organizationId && dateKey >= from && dateKey <= to;

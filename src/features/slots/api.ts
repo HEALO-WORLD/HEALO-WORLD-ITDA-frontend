@@ -1,6 +1,7 @@
 import { getFailedEquipmentIds } from "@/features/incidents/mockIncidentStore";
 import { getSeoulNow } from "@/lib/date/seoulDate";
-import { getMockSlots, MOCK_PARTNER_ORGANIZATIONS } from "@/lib/dev/mockSlots";
+import { getAllMockSlots } from "@/features/equipment/mockEquipmentStore";
+import { MOCK_PARTNER_ORGANIZATIONS } from "@/lib/dev/mockSlots";
 
 import {
   applyEquipmentFailures,
@@ -38,8 +39,9 @@ export interface SlotQueryOptions {
 
 /** 장애 장비 미래 슬롯을 예약 불가로 계산한 Mock 슬롯 (검색·달력·단건 조회 공통) */
 function getMockSlotsWithFailures(): ExamSlot[] {
-  const { dateKey, dateTime } = getSeoulNow();
-  return applyEquipmentFailures(getMockSlots(dateKey), getFailedEquipmentIds(), dateTime);
+  // 원본 Mock + 검사기관에서 생성한 슬롯(개발용 Mock 저장소)
+  const { dateTime } = getSeoulNow();
+  return applyEquipmentFailures(getAllMockSlots(), getFailedEquipmentIds(), dateTime);
 }
 
 /** 제외 장비를 뺀 Mock 슬롯 */
