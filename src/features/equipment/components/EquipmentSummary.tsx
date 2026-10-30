@@ -1,17 +1,23 @@
+"use client";
+
 import { CalendarCheck, Magnet, ScanLine, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import type { Equipment } from "../types";
+import { useLiveEquipments } from "../useLiveEquipments";
 
 import TodayAvailableSlotCount from "./TodayAvailableSlotCount";
 
 interface EquipmentSummaryProps {
   organizationId: string;
-  equipments: Equipment[];
 }
 
-/** 장비 운영 요약 (MRI 장비 수 · CT 장비 수 · 오늘 예약 가능 슬롯). 좁은 화면에서는 줄바꿈된다 */
-export default function EquipmentSummary({ organizationId, equipments }: EquipmentSummaryProps) {
+/**
+ * 장비 운영 요약 (MRI 장비 수 · CT 장비 수 · 오늘 예약 가능 슬롯). 좁은 화면에서는 줄바꿈된다.
+ * 장비 수는 원본 + 화면에서 등록한 장비(개발용 Mock) 기준이다
+ */
+export default function EquipmentSummary({ organizationId }: EquipmentSummaryProps) {
+  const equipments = useLiveEquipments(organizationId);
   const countByType = (type: Equipment["examType"]) =>
     equipments.filter(({ examType }) => examType === type).length;
 

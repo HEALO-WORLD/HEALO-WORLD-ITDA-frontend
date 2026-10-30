@@ -1,5 +1,5 @@
 import PageHeader from "@/components/layout/PageHeader";
-import { getCurrentExaminingOrganizationId, getEquipments } from "@/features/equipment/api";
+import { getCurrentExaminingOrganizationId } from "@/features/equipment/api";
 import { getIncidentRecords, IS_MOCK_DATA } from "@/features/incidents/api";
 import IncidentBoard from "@/features/incidents/components/IncidentBoard";
 import { getReceivedReservations } from "@/features/reservations/api";
@@ -11,13 +11,9 @@ import { getReceivedReservations } from "@/features/reservations/api";
  */
 export default async function IncidentsPage() {
   const organizationId = await getCurrentExaminingOrganizationId();
-  const [incidents, equipments, reservations] = organizationId
-    ? await Promise.all([
-        getIncidentRecords(organizationId),
-        getEquipments(organizationId),
-        getReceivedReservations(organizationId),
-      ])
-    : [[], [], []];
+  const [incidents, reservations] = organizationId
+    ? await Promise.all([getIncidentRecords(organizationId), getReceivedReservations(organizationId)])
+    : [[], []];
 
   return (
     <>
@@ -31,7 +27,6 @@ export default async function IncidentsPage() {
         <IncidentBoard
           organizationId={organizationId}
           baseIncidents={incidents}
-          equipments={equipments.map(({ id, name, examType }) => ({ id, name, examType }))}
           rescheduleRequiredCount={reservations.filter(({ status }) => status === "RESCHEDULE_REQUIRED").length}
         />
       ) : (

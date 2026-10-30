@@ -1,3 +1,5 @@
+import { Clock, Pencil } from "lucide-react";
+
 import { WEEKDAYS } from "@/lib/format/date";
 
 import { WEEK_ORDER } from "../operatingHours";
@@ -5,13 +7,20 @@ import type { Equipment } from "../types";
 
 import EquipmentStatusBadge from "./EquipmentStatusBadge";
 
-/** 장비 요일별 운영 시간 (조회 전용 모달 내용, 수정 기능 없음) */
+/**
+ * 장비 상세: 상태·요일별 운영 시간과 [장비 정보 수정]·[운영 시간 수정] (수정은 개발용 Mock).
+ * 장비 상태는 진행 중 장애 이력으로만 정해지며 여기서 바꾸지 않는다.
+ */
 export default function EquipmentScheduleDetail({
   equipment,
   onClose,
+  onEditInfo,
+  onEditHours,
 }: {
   equipment: Equipment;
   onClose: () => void;
+  onEditInfo: () => void;
+  onEditHours: () => void;
 }) {
   const byWeekday = new Map(equipment.operatingHours.map((item) => [item.weekday, item]));
 
@@ -49,9 +58,27 @@ export default function EquipmentScheduleDetail({
         </tbody>
       </table>
       <p className="mt-3 text-sm text-gray-500">
-        조회 전용입니다. 운영 시간 변경은 장비 API 연동 후 제공될 예정입니다.
+        {equipment.operatingHours.length === 0
+          ? "운영 시간이 없어 슬롯을 만들 수 없습니다. [운영 시간 수정]에서 설정해 주세요."
+          : "운영 시간을 바꿔도 이미 만든 슬롯·예약은 바뀌지 않고, 이후 슬롯 생성에 적용됩니다."}
       </p>
-      <div className="mt-6 flex justify-end">
+      <div className="mt-6 flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          onClick={onEditInfo}
+          className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-line bg-white px-4 text-[15px] font-semibold text-gray-700 hover:bg-gray-50"
+        >
+          <Pencil className="size-4" aria-hidden="true" />
+          장비 정보 수정
+        </button>
+        <button
+          type="button"
+          onClick={onEditHours}
+          className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-primary bg-white px-4 text-[15px] font-semibold text-primary hover:bg-primary-soft"
+        >
+          <Clock className="size-4" aria-hidden="true" />
+          운영 시간 수정
+        </button>
         <button
           type="button"
           onClick={onClose}

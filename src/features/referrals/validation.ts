@@ -41,6 +41,9 @@ export function validateSelectedSlot(
   if (slot.blockedReason === "EQUIPMENT_FAILURE") {
     return "장비 장애로 지금은 예약할 수 없는 슬롯입니다. 검사 슬롯을 다시 선택해 주세요.";
   }
+  if (slot.blockedReason === "OPERATOR_SUSPENDED") {
+    return "검사기관이 운영을 중단한 슬롯입니다. 검사 슬롯을 다시 선택해 주세요.";
+  }
   if (!slot.isAvailable) return "예약이 마감된 슬롯입니다. 검사 슬롯을 다시 선택해 주세요.";
   if (!isUpcomingSlot(slot, nowDateTime)) {
     return "검사 시간이 이미 지난 슬롯입니다. 검사 슬롯을 다시 선택해 주세요.";

@@ -1,6 +1,6 @@
 import { getSeoulNow } from "@/lib/date/seoulDate";
 import { MOCK_INCIDENTS } from "@/lib/dev/mockIncidents";
-import { getMockEquipmentsByOrganization } from "@/lib/dev/mockSlots";
+import { getEffectiveEquipments } from "@/features/equipment/mockEquipmentStore";
 
 import { getResolveBlockReason, hasErrors, validateIncidentRegister, type IncidentRegisterInput } from "./rules";
 import type { EquipmentIncident } from "./types";
@@ -159,7 +159,8 @@ export async function registerMockIncident(
   await wait();
   const incidents = getEffectiveIncidents();
   const errors = validateIncidentRegister(input, {
-    organizationEquipmentIds: new Set(getMockEquipmentsByOrganization(organizationId).map(({ id }) => id)),
+    // 원본 장비 + 이 브라우저에서 등록한 장비 (현재 기관만)
+    organizationEquipmentIds: new Set(getEffectiveEquipments(organizationId).map(({ id }) => id)),
     activeEquipmentIds: toActiveEquipmentIds(incidents),
     nowDateTime: getSeoulNow().dateTime,
   });
@@ -212,6 +213,18 @@ export async function resolveMockIncident(
       : { ...changes, resolved: { ...changes.resolved, [incidentId]: nowDateTime } },
   );
   return { ok: true, incident: { ...incident, status: "RESOLVED", resolvedAt: nowDateTime } };
+}
+
+/**
+ * 개발용: 지정한 장비(장비·슬롯 변경 초기화로 사라지는 등록 장비)의 등록 장애를 지운다.
+ * 원본 Mock 장애와 다른 장비의 기록은 그대로 둔다.
+ */
+export function removeMockIncidentsForEquipments(equipmentIds: readonly string[]) {
+  if (equipmentIds.length === 0) return;
+  const ids = new Set(equipmentIds);
+  const changes = readChanges();
+  const created = changes.created.filter((incident) => !ids.has(incident.equipmentId));
+  if (created.length !== changes.created.length) writeChanges({ ...changes, created });
 }
 
 /** 개발용: 이 브라우저에 저장된 등록·복구 내역을 지우고 원본 Mock 상태로 되돌린다 */

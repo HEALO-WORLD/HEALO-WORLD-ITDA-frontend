@@ -1,20 +1,15 @@
 import PageHeader from "@/components/layout/PageHeader";
-import {
-  getCurrentExaminingOrganizationId,
-  getEquipments,
-  IS_MOCK_DATA,
-} from "@/features/equipment/api";
+import { getCurrentExaminingOrganizationId, IS_MOCK_DATA } from "@/features/equipment/api";
 import EquipmentSlotWorkspace from "@/features/equipment/components/EquipmentSlotWorkspace";
 import EquipmentSummary from "@/features/equipment/components/EquipmentSummary";
 
 /**
- * 장비·슬롯 운영 (S05) — 조회 중심.
- * 장비 선택 → 날짜 확인 → 그날 슬롯 조회. 장비 정보는 서버에서, 현재 시각에 따라 달라지는
- * 슬롯 현황은 클라이언트에서 계산한다.
+ * 장비·슬롯 운영 (S05).
+ * 장비 선택 → 날짜 확인 → 그날 슬롯 조회, 장비 등록·수정, 운영 시간 수정, 슬롯 생성·운영 중단(개발용 Mock).
+ * 장비·슬롯 변경분은 브라우저 저장소에 있어 서버에서는 읽지 않고, 화면(Client Component)에서 원본과 합쳐 보여 준다.
  */
 export default async function EquipmentPage() {
   const organizationId = await getCurrentExaminingOrganizationId();
-  const equipments = organizationId ? await getEquipments(organizationId) : [];
 
   return (
     <>
@@ -30,8 +25,8 @@ export default async function EquipmentPage() {
 
       {organizationId ? (
         <div className="flex flex-col gap-5">
-          <EquipmentSummary organizationId={organizationId} equipments={equipments} />
-          <EquipmentSlotWorkspace organizationId={organizationId} equipments={equipments} />
+          <EquipmentSummary organizationId={organizationId} />
+          <EquipmentSlotWorkspace organizationId={organizationId} />
         </div>
       ) : (
         <p role="status" className="rounded-xl border border-dashed border-line bg-white px-6 py-16 text-center text-[15px] text-gray-500">

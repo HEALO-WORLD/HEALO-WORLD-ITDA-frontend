@@ -2,7 +2,7 @@ import { RotateCcw, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import DatePicker from "@/components/ui/DatePicker";
-import { useFailedEquipmentIds } from "@/features/incidents/useMockIncidents";
+import { useSlotDataKey } from "@/features/equipment/useLiveEquipments";
 import { fieldLabelClass, SelectInput, type SelectOption } from "@/components/ui/FormControls";
 import type { DateKey } from "@/lib/date/seoulDate";
 
@@ -103,20 +103,20 @@ export default function SlotSearchFilter({
     });
   }, [startCriteria, queryOptions]);
 
-  // 장애 장비가 바뀌면(장애 등록·복구) 현재 조건으로 달력 가용 날짜를 다시 계산한다.
+  // 장애 장비나 슬롯 데이터가 바뀌면(장애 등록·복구, 슬롯 생성·운영 중단) 현재 조건으로 달력 가용 날짜를 다시 계산한다.
   // 선택한 날짜가 더는 예약 불가면 refreshAvailability가 날짜를 비우고 안내한다
-  const { key: failedEquipmentKey } = useFailedEquipmentIds();
+  const slotDataKey = useSlotDataKey();
   const latestCriteriaRef = useRef(criteria);
   useEffect(() => {
     latestCriteriaRef.current = criteria;
   });
-  const refreshedKeyRef = useRef(failedEquipmentKey);
+  const refreshedKeyRef = useRef(slotDataKey);
   useEffect(() => {
-    if (refreshedKeyRef.current === failedEquipmentKey) return;
-    refreshedKeyRef.current = failedEquipmentKey;
+    if (refreshedKeyRef.current === slotDataKey) return;
+    refreshedKeyRef.current = slotDataKey;
     const current = latestCriteriaRef.current;
     void refreshAvailability(current, current.date);
-  }, [failedEquipmentKey, refreshAvailability]);
+  }, [slotDataKey, refreshAvailability]);
 
   /** 달력에 영향을 주는 조건(유형·기관·시간대) 변경 */
   const updateFilter = (patch: Partial<AvailabilityFilter>) => {
