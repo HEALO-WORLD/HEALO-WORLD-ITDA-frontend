@@ -1,3 +1,4 @@
+import { assertMockMode } from "@/lib/api/config";
 import { MOCK_NOTIFICATIONS } from "@/lib/dev/mockNotifications";
 
 import type { NotificationItem } from "./types";
@@ -16,5 +17,6 @@ export const IS_MOCK_DATA = true;
 
 /** 최신순 */
 export async function getNotifications(): Promise<readonly NotificationItem[]> {
+  assertMockMode("notifications.getNotifications");
   return MOCK_NOTIFICATIONS;
 }

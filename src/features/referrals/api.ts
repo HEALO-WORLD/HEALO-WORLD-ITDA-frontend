@@ -1,3 +1,4 @@
+import { assertMockMode } from "@/lib/api/config";
 import { MOCK_REFERRAL_SUMMARIES } from "@/lib/dev/mockReferrals";
 
 import type { ReferralSummary } from "./types";
@@ -13,15 +14,18 @@ import type { ReferralSummary } from "./types";
 export const IS_MOCK_DATA = true;
 
 export async function getRecentReferrals(): Promise<readonly ReferralSummary[]> {
+  assertMockMode("referrals.getRecentReferrals");
   return MOCK_REFERRAL_SUMMARIES;
 }
 
 export async function getReferralById(referralId: string): Promise<ReferralSummary | null> {
+  assertMockMode("referrals.getReferralById");
   return MOCK_REFERRAL_SUMMARIES.find(({ id }) => id === referralId) ?? null;
 }
 
 /** 재조정이 필요한 의뢰·예약 (예약 상태 기준) */
 export async function getRescheduleRequiredReferrals(): Promise<ReferralSummary[]> {
+  assertMockMode("referrals.getRescheduleRequiredReferrals");
   return MOCK_REFERRAL_SUMMARIES.filter(({ status }) => status === "RESCHEDULE_REQUIRED");
 }
 

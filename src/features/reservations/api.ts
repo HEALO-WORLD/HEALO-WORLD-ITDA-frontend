@@ -1,4 +1,5 @@
 import { getRecentReferrals, IS_MOCK_DATA as IS_REFERRAL_MOCK } from "@/features/referrals/api";
+import { assertMockMode } from "@/lib/api/config";
 
 import type { Reservation } from "./types";
 
@@ -13,6 +14,7 @@ import type { Reservation } from "./types";
 export const IS_MOCK_DATA = IS_REFERRAL_MOCK;
 
 export async function getReceivedReservations(examiningOrganizationId: string): Promise<Reservation[]> {
+  assertMockMode("reservations.getReceivedReservations");
   const referrals = await getRecentReferrals();
   return referrals.filter(({ organizationId }) => organizationId === examiningOrganizationId);
 }

@@ -1,4 +1,5 @@
 import type { ExamSlot, ExamType } from "@/features/slots/types";
+import { getMockOnlyError } from "@/lib/api/config";
 import { addDays, getSeoulNow } from "@/lib/date/seoulDate";
 import { createMockChangeStore } from "@/lib/dev/mockChangeStore";
 import { MOCK_REFERRAL_SUMMARIES } from "@/lib/dev/mockReferrals";
@@ -313,6 +314,8 @@ export async function registerMockEquipment(
   organizationId: string,
   input: EquipmentInput,
 ): Promise<MutationResult<EffectiveEquipment>> {
+  const mockOnlyError = getMockOnlyError("equipment.registerEquipment");
+  if (mockOnlyError) return { ok: false, message: mockOnlyError.message };
   await wait();
   if (!isKnownOrganization(organizationId)) return { ok: false, message: "장비를 등록할 수 없는 기관입니다." };
   const changes = equipmentChangeStore.read();
@@ -353,6 +356,8 @@ export async function registerMockEquipmentWithOperatingHours(
   input: EquipmentInput,
   days: readonly OperatingDayInput[],
 ): Promise<RegisterWithHoursResult> {
+  const mockOnlyError = getMockOnlyError("equipment.registerEquipmentWithOperatingHours");
+  if (mockOnlyError) return { ok: false, savedStage: "NONE", message: mockOnlyError.message };
   if (!hasOpenDay(days)) return { ok: false, savedStage: "NONE", message: "운영하는 요일을 하루 이상 설정해 주세요." };
   const invalidDay = days.map(validateOperatingDay).find(hasErrors);
   if (invalidDay) return { ok: false, savedStage: "NONE", message: firstError(invalidDay) ?? "운영 시간을 확인해 주세요." };
@@ -374,6 +379,8 @@ export async function updateMockEquipment(
   equipmentId: string,
   input: EquipmentInput,
 ): Promise<MutationResult> {
+  const mockOnlyError = getMockOnlyError("equipment.updateEquipment");
+  if (mockOnlyError) return { ok: false, message: mockOnlyError.message };
   await wait();
   const changes = equipmentChangeStore.read();
   const current = getEffectiveEquipmentsFrom(changes, organizationId);
@@ -412,6 +419,8 @@ export async function updateMockOperatingHours(
   equipmentId: string,
   days: readonly OperatingDayInput[],
 ): Promise<MutationResult> {
+  const mockOnlyError = getMockOnlyError("equipment.updateOperatingHours");
+  if (mockOnlyError) return { ok: false, message: mockOnlyError.message };
   await wait();
   const changes = equipmentChangeStore.read();
   if (!getEffectiveEquipmentsFrom(changes, organizationId).some(({ id }) => id === equipmentId)) {
@@ -443,6 +452,8 @@ export async function generateMockSlots(
   input: SlotGenerationInput,
   isEquipmentFailed: (equipmentId: string) => boolean,
 ): Promise<MutationResult<SlotGenerationPreview>> {
+  const mockOnlyError = getMockOnlyError("equipment.generateSlots");
+  if (mockOnlyError) return { ok: false, message: mockOnlyError.message };
   await wait();
   const changes = equipmentChangeStore.read();
   const equipment = getEffectiveEquipmentsFrom(changes, organizationId).find(({ id }) => id === input.equipmentId) ?? null;
@@ -491,6 +502,8 @@ export async function setMockSlotSuspended(
   slot: ExamSlot,
   action: "SUSPEND" | "RESUME",
 ): Promise<MutationResult> {
+  const mockOnlyError = getMockOnlyError("equipment.setSlotSuspended");
+  if (mockOnlyError) return { ok: false, message: mockOnlyError.message };
   await wait();
   const changes = equipmentChangeStore.read();
   if (slot.organizationId !== organizationId) return { ok: false, message: "우리 기관 슬롯이 아닙니다." };

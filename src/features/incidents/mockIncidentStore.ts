@@ -1,3 +1,4 @@
+import { getMockOnlyError } from "@/lib/api/config";
 import { getSeoulNow } from "@/lib/date/seoulDate";
 import { MOCK_INCIDENTS } from "@/lib/dev/mockIncidents";
 import { getEffectiveEquipments } from "@/features/equipment/mockEquipmentStore";
@@ -156,6 +157,8 @@ export async function registerMockIncident(
   organizationId: string,
   input: IncidentRegisterInput,
 ): Promise<IncidentMutationResult> {
+  const mockOnlyError = getMockOnlyError("incidents.registerIncident");
+  if (mockOnlyError) return { ok: false, message: mockOnlyError.message };
   await wait();
   const incidents = getEffectiveIncidents();
   const errors = validateIncidentRegister(input, {
@@ -191,6 +194,8 @@ export async function resolveMockIncident(
   organizationId: string,
   incidentId: string,
 ): Promise<IncidentMutationResult> {
+  const mockOnlyError = getMockOnlyError("incidents.resolveIncident");
+  if (mockOnlyError) return { ok: false, message: mockOnlyError.message };
   await wait();
   const incident = getEffectiveIncidents().find(
     (item) => item.id === incidentId && item.organizationId === organizationId,

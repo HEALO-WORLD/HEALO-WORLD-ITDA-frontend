@@ -1,3 +1,4 @@
+import { getMockOnlyError } from "@/lib/api/config";
 import { getSeoulNow } from "@/lib/date/seoulDate";
 
 import { getRegistrationBlockReason, validateResultInput } from "./rules";
@@ -23,6 +24,8 @@ export async function registerExaminationResult(
   examination: Examination,
   input: ExamResultInput,
 ): Promise<RegisterResultOutcome> {
+  const mockOnlyError = getMockOnlyError("examinations.registerResult");
+  if (mockOnlyError) return { ok: false, message: mockOnlyError.message };
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
 
   const blockReason = getRegistrationBlockReason(examination);
